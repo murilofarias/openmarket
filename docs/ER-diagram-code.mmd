@@ -1,0 +1,67 @@
+erDiagram
+    accounts ||--|{ profiles : "has"
+    accounts ||--o{ products : "sells"
+    accounts ||--o{ orders : "buyer"
+    accounts ||--o{ orders : "seller"
+    profiles ||--o| buyers : "is"
+    profiles ||--o| sellers : "is"
+    orders ||--|{ order_items : "contains"
+    products ||--o{ order_items : "ordered_in"
+
+    accounts {
+        UUID id PK
+        VARCHAR email UK "NOT NULL, UNIQUE"
+        VARCHAR password_hash "NOT NULL"
+        VARCHAR name "NOT NULL"
+        TIMESTAMP created_at
+        TIMESTAMP updated_at
+    }
+
+    profiles {
+        UUID id PK
+        UUID account_id FK "NOT NULL"
+        VARCHAR role "NOT NULL, DISCRIMINATOR"
+        TIMESTAMP created_at "NOT NULL"
+        DECIMAL rating
+    }
+
+    buyers {
+        UUID id PK  "FK to profiles.id"
+        VARCHAR default_shipping_address
+        INTEGER total_orders
+    }
+
+    sellers {
+        UUID id PK "FK to profiles.id"
+        VARCHAR store_name "NOT NULL"
+        TEXT store_description
+        VARCHAR seller_status
+    }
+
+    products {
+        UUID id PK
+        VARCHAR name "NOT NULL"
+        TEXT description
+        DECIMAL price "NOT NULL, precision=10, scale=2"
+        INTEGER stock "NOT NULL"
+        UUID seller_account_id FK "NOT NULL"
+        VARCHAR status "NOT NULL"
+        TIMESTAMP created_at "NOT NULL"
+    }
+
+    orders {
+        UUID id PK
+        DECIMAL total "NOT NULL, precision=10, scale=2"
+        VARCHAR status "NOT NULL"
+        TIMESTAMP created_at
+        UUID buyer_account_id FK "NOT NULL"
+        UUID seller_account_id FK "NOT NULL"
+    }
+
+    order_items {
+        UUID id PK
+        UUID order_id FK "NOT NULL"
+        UUID product_id FK "NOT NULL"
+        INTEGER quantity "NOT NULL"
+        DOUBLE price "NOT NULL"
+    }

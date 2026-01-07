@@ -1,0 +1,24 @@
+spring:
+  application:
+    name: openmarket
+  datasource:
+    url: jdbc:postgresql://localhost:5432/openmarket
+    username: openmarket_user
+    password: secret
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+    show-sql: false
+
+  sql:
+    init:
+      mode: never
+
+server:
+  port: 8080
