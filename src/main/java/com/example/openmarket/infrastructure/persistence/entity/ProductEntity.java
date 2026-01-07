@@ -79,4 +79,12 @@ public class ProductEntity {
     public void setSellerAccountId(UUID sellerAccountId) {
         this.sellerAccountId = sellerAccountId;
     }
+
+    public List<ProductImageEntity> getProductImages() {
+        return productImages;
+    }
+
+    public void setProductImages(List<ProductImageEntity> productImages) {
+        this.productImages = productImages;
+    }
 }

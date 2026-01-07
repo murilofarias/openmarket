@@ -13,7 +13,7 @@ docker compose up -d
 ### Executar aplicação
 
 ```
-./mvnw spring-boot:run -Dspring.profiles.active=dev
+./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
 ```
 
 ```

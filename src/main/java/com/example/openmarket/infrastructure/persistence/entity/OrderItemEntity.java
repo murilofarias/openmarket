@@ -27,32 +27,41 @@ public class OrderItemEntity {
     @Column(name = "price", nullable = false, precision = 10, scale = 2)
     private BigDecimal price;
 
-    protected OrderItemEntity() {}
-
-    public ProductEntity getProduct() { return product; }
-    public Integer getQuantity() { return quantity; }
+    public OrderItemEntity() {}
 
     public UUID getId() {
         return id;
     }
 
-    public BigDecimal getPrice() {
-        return price;
+    public void setId(UUID id) {
+        this.id = id;
     }
 
-    public void setQuantity(Integer quantity) {
-        this.quantity = quantity;
-    }
-
-    public void setPrice(BigDecimal price) {
-        this.price = price;
+    public UUID getProductId() {
+        return productId;
     }
 
     public void setProductId(UUID productId) {
         this.productId = productId;
     }
 
-    public UUID getProductId() {
-        return productId;
+    public ProductEntity getProduct() {
+        return product;
+    }
+
+    public Integer getQuantity() {
+        return quantity;
+    }
+
+    public void setQuantity(Integer quantity) {
+        this.quantity = quantity;
+    }
+
+    public BigDecimal getPrice() {
+        return price;
+    }
+
+    public void setPrice(BigDecimal price) {
+        this.price = price;
     }
 }

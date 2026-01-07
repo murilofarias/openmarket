@@ -115,5 +115,6 @@ public class Product {
     public BigDecimal getPrice() { return price; }
     public Integer getStock() { return stock; }
     public ProductStatus getStatus() { return status; }
+    public List<ProductImage> getImages() { return images; }
     public LocalDateTime getCreatedAt() { return createdAt; }
 }

@@ -66,6 +66,7 @@ public class Order {
     public UUID getId() { return id; }
     public UUID getBuyerAccountId() { return buyerAccountId; }
     public UUID getSellerAccountId() { return sellerAccountId; }
+    public List<OrderItem> getItems() { return items; }
     public BigDecimal getTotal() { return total; }
     public OrderStatus getStatus() { return status; }
 
