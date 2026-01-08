@@ -31,6 +31,9 @@ public class AccountMapper {
         Set<ProfileEntity> profileEntities = domain.getProfiles().stream()
                 .map(profileMapper::toEntity)
                 .collect(Collectors.toSet());
+
+        // Set bidirectional relationship
+        profileEntities.forEach(profile -> profile.setAccount(entity));
         entity.setProfiles(profileEntities);
 
         return entity;

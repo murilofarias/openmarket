@@ -9,7 +9,7 @@ public abstract class Profile {
 
     protected Profile() {
         this.createdAt = LocalDateTime.now();
-        this.rating = 0.0;
+        this.rating = null;
     }
 
     protected Profile(LocalDateTime createdAt, Double rating) {

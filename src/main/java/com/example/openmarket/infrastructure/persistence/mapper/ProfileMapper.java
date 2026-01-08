@@ -36,6 +36,7 @@ public class ProfileMapper {
 
         sellerEntity.setSellerStatus(domain.getSellerStatus());
         sellerEntity.setStoreDescription(domain.getStoreDescription());
+        sellerEntity.setStoreName(domain.getStoreName());
 
         sellerEntity.setRating(domain.getRating());
         sellerEntity.setCreatedAt(domain.getCreatedAt());

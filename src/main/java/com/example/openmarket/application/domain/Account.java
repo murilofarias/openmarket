@@ -1,5 +1,7 @@
 package com.example.openmarket.application.domain;
 
+import com.example.openmarket.application.exception.DomainException;
+
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
@@ -36,10 +38,31 @@ public class Account {
         this.updatedAt = updatedAt;
     }
 
-    public static Account create(String email, String passwordHash, String name) {
+    public static Account create(String email, String passwordHash, String name, Set<Profile> profiles) {
         validateEmail(email);
         validateName(name);
-        return new Account(UUID.randomUUID(), email, passwordHash, name);
+        validateProfiles(profiles);
+
+        Account account = new Account(UUID.randomUUID(), email, passwordHash, name);
+        account.profiles = new HashSet<>(profiles);
+        return account;
+    }
+
+    private static void validateProfiles(Set<Profile> profiles) {
+        if (profiles == null || profiles.isEmpty()) {
+            throw new DomainException("At least one profile (buyer or seller) must be provided");
+        }
+
+        long buyerCount = profiles.stream().filter(p -> p.getProfileRole() == Role.BUYER).count();
+        long sellerCount = profiles.stream().filter(p -> p.getProfileRole() == Role.SELLER).count();
+
+        if (buyerCount > 1) {
+            throw new DomainException("Only one buyer profile is allowed");
+        }
+
+        if (sellerCount > 1) {
+            throw new DomainException("Only one seller profile is allowed");
+        }
     }
 
     // Reconstitution (from database)
@@ -49,10 +72,9 @@ public class Account {
         return new Account(id, email, passwordHash, name, profiles, createdAt, updatedAt);
     }
 
-    // Business methods
     public void addProfile(Profile profile) {
         if (hasRole(profile.getProfileRole())) {
-            throw new IllegalStateException("Profile with role " + profile.getProfileRole() + " already exists");
+            throw new DomainException("Profile with role " + profile.getProfileRole() + " already exists");
         }
         profiles.add(profile);
     }
@@ -77,13 +99,13 @@ public class Account {
 
     private static void validateEmail(String email) {
         if (email == null || !email.matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
-            throw new IllegalArgumentException("Invalid email format");
+            throw new DomainException("Invalid email format");
         }
     }
 
     private static void validateName(String name) {
         if (name == null || name.trim().isEmpty()) {
-            throw new IllegalArgumentException("Name cannot be empty");
+            throw new DomainException("Name cannot be empty");
         }
     }
 

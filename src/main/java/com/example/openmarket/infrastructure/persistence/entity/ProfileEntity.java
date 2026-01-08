@@ -42,7 +42,7 @@ public abstract class ProfileEntity {
     public AccountEntity getAccount() { return account; }
     public Role getRole() { return role; }
 
-    void setAccount(AccountEntity account) {
+    public void setAccount(AccountEntity account) {
         this.account = account;
     }
 

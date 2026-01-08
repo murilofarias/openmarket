@@ -12,7 +12,6 @@ import java.util.*;
 public class OrderEntity{
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
     @Column(name = "price", nullable = false, precision = 10, scale = 2)
