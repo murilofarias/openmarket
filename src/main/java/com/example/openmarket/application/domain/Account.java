@@ -23,8 +23,8 @@ public class Account {
         this.email = email;
         this.passwordHash = passwordHash;
         this.profiles = new HashSet<>();
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
+        this.createdAt = null; // Will be set by database
+        this.updatedAt = null; // Will be set by database
     }
 
     private Account(UUID id, String email, String passwordHash, String name,
@@ -94,7 +94,7 @@ public class Account {
     public void updateName(String newName) {
         validateName(newName);
         this.name = newName;
-        this.updatedAt = LocalDateTime.now();
+        // updatedAt will be automatically set by database on update
     }
 
     private static void validateEmail(String email) {

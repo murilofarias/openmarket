@@ -27,7 +27,7 @@ public class Product {
         this.price = price;
         this.stock = stock;
         this.status = ProductStatus.DRAFT;
-        this.createdAt = LocalDateTime.now();
+        this.createdAt = null; // Will be set by database
     }
 
     private Product(UUID id, UUID sellerAccountId, String name, String description, BigDecimal price, Integer stock,

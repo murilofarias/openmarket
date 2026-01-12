@@ -25,7 +25,7 @@ public class OrderMapper {
         entity.setSellerAccountId(domain.getSellerAccountId());
         entity.setTotal(domain.getTotal());
         entity.setStatus(domain.getStatus());
-        entity.setCreatedAt(domain.getCreatedAt());
+        // createdAt and updatedAt will be set automatically by JPA lifecycle callbacks
 
         List<OrderItemEntity> orderItemEntities = domain.getItems().stream()
                 .map(orderItemMapper::toEntity)

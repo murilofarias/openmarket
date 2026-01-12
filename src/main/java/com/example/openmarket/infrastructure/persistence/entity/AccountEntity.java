@@ -9,7 +9,7 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "accounts")
-public class AccountEntity {
+public class AccountEntity extends BaseEntity {
 
     @Id
     private UUID id;
@@ -29,12 +29,6 @@ public class AccountEntity {
     @OneToMany(mappedBy = "sellerAccount", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<ProductEntity> products = new HashSet<>();
 
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
-
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
-
     public AccountEntity() {}
 
     public UUID getId() { return id; }
@@ -51,12 +45,6 @@ public class AccountEntity {
 
     public Set<ProfileEntity> getProfiles() { return profiles; }
     public void setProfiles(Set<ProfileEntity> profiles) { this.profiles = profiles; }
-
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
-
-    public LocalDateTime getUpdatedAt() { return updatedAt; }
-    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
 
     public Set<ProductEntity> getProducts() {
         return products;

@@ -10,7 +10,7 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "products")
-public class ProductEntity {
+public class ProductEntity extends BaseEntity {
 
     @Id
     private UUID id;
@@ -43,9 +43,6 @@ public class ProductEntity {
     @Column(name = "status", nullable = false, length = 50)
     private ProductStatus status;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
-
     public ProductEntity() {}
 
     public UUID getId() { return id; }
@@ -67,9 +64,6 @@ public class ProductEntity {
 
     public ProductStatus getStatus() { return status; }
     public void setStatus(ProductStatus status) { this.status = status; }
-
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 
     public UUID getSellerAccountId() {
         return sellerAccountId;

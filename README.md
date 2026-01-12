@@ -1,21 +1,21 @@
-### Inicializar postgres
-
-```
-docker compose up -d
-```
-
 ### Compilar aplicação
 
 ```
 ./mvnw clean package
 ```
 
-### Executar aplicação
+### Compilar e subir o sistema
 
 ```
-./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
+./run.sh
 ```
 
-```
-java -jar app.jar --spring.profiles.active=dev
-```
+
+
+
+### Roadmap
+
+1. add CreateAccount unit tests
+2. add new Profile to an existing account
+3. add search products feature
+4. add createOrder feature

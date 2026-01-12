@@ -27,7 +27,7 @@ public class ProductMapper {
         entity.setPrice(domain.getPrice());
         entity.setStock(domain.getStock());
         entity.setStatus(domain.getStatus());
-        entity.setCreatedAt(domain.getCreatedAt());
+        // createdAt and updatedAt will be set automatically by JPA lifecycle callbacks
 
         List<ProductImageEntity> imageEntities = domain.getImages().stream()
                 .map(productImageMapper::toEntity)

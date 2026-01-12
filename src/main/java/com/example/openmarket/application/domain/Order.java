@@ -18,7 +18,7 @@ public class Order {
     public Order(UUID buyerAccountId, UUID sellerAccountId, List<OrderItem> items) {
         this.buyerAccountId = buyerAccountId;
         this.sellerAccountId = sellerAccountId;
-        this.createdAt = LocalDateTime.now();
+        this.createdAt = null; // Will be set by database
         this.items = items;
         calculateTotal();
     }

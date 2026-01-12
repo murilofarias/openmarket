@@ -25,8 +25,7 @@ public class AccountMapper {
         entity.setEmail(domain.getEmail());
         entity.setPasswordHash(domain.getPasswordHash());
         entity.setName(domain.getName());
-        entity.setCreatedAt(domain.getCreatedAt());
-        entity.setUpdatedAt(domain.getUpdatedAt());
+        // createdAt and updatedAt will be set automatically by JPA lifecycle callbacks
 
         Set<ProfileEntity> profileEntities = domain.getProfiles().stream()
                 .map(profileMapper::toEntity)

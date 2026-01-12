@@ -9,7 +9,7 @@ import java.util.*;
 
 @Entity
 @Table(name = "orders")
-public class OrderEntity{
+public class OrderEntity extends BaseEntity {
 
     @Id
     private UUID id;
@@ -20,9 +20,6 @@ public class OrderEntity{
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 50)
     private OrderStatus status;
-
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
 
     @Column(name = "buyer_account_id", nullable = false)
     private UUID buyerAccountId;
@@ -42,9 +39,8 @@ public class OrderEntity{
     @JoinColumn(name = "seller_account_id", nullable = false, insertable = false, updatable = false)
     private AccountEntity seller;
 
-    public UUID getId() {
-        return id;
-    }
+    public UUID getId() { return id; }
+    public void setId(UUID id) { this.id = id; }
 
     public BigDecimal getTotal() {
         return total;
@@ -52,10 +48,6 @@ public class OrderEntity{
 
     public OrderStatus getStatus() {
         return status;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
     }
 
     public UUID getBuyerAccountId() {
@@ -78,20 +70,12 @@ public class OrderEntity{
         return seller;
     }
 
-    public void setId(UUID id) {
-        this.id = id;
-    }
-
     public void setTotal(BigDecimal total) {
         this.total = total;
     }
 
     public void setStatus(OrderStatus status) {
         this.status = status;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
     }
 
     public void setBuyerAccountId(UUID buyerAccountId) {

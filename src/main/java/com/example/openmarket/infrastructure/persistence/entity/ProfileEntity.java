@@ -10,7 +10,7 @@ import java.util.UUID;
 @Table(name = "profiles")
 @Inheritance(strategy = InheritanceType.JOINED)
 @DiscriminatorColumn(name = "role", discriminatorType = DiscriminatorType.STRING)
-public abstract class ProfileEntity {
+public abstract class ProfileEntity extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -24,9 +24,6 @@ public abstract class ProfileEntity {
     @Column(name = "role", nullable = false, insertable = false, updatable = false)
     private Role role;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
-
     @Column(name = "rating")
     private Double rating;
 
@@ -34,11 +31,11 @@ public abstract class ProfileEntity {
 
     public ProfileEntity(Role role) {
         this.role = role;
-        this.createdAt = LocalDateTime.now();
     }
 
     // Getters/Setters
     public UUID getId() { return id; }
+
     public AccountEntity getAccount() { return account; }
     public Role getRole() { return role; }
 
@@ -52,13 +49,5 @@ public abstract class ProfileEntity {
 
     public void setRating(Double rating) {
         this.rating = rating;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
     }
 }
