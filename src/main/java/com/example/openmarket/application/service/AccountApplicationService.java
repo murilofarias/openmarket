@@ -3,6 +3,7 @@ package com.example.openmarket.application.service;
 import com.example.openmarket.application.command.CreateAccountCommand;
 import com.example.openmarket.application.domain.Account;
 import com.example.openmarket.application.exception.EmailAlreadyAssociatedException;
+import com.example.openmarket.application.exception.ResourceNotFoundException;
 import com.example.openmarket.application.port.AccountRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,6 +40,6 @@ public class AccountApplicationService {
      */
     public Account findById(UUID id) {
         return accountRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Account not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Account", String.valueOf(id)));
     }
 }
