@@ -21,8 +21,8 @@ public class OrderMapper {
     public OrderEntity toEntity(Order domain) {
         OrderEntity entity = new OrderEntity();
         entity.setId(domain.getId());
-        entity.setBuyerAccountId(domain.getBuyerAccountId());
-        entity.setSellerAccountId(domain.getSellerAccountId());
+        entity.setBuyerProfileId(domain.getBuyerProfileId());
+        entity.setSellerProfileId(domain.getSellerProfileId());
         entity.setTotal(domain.getTotal());
         entity.setStatus(domain.getStatus());
         // createdAt and updatedAt will be set automatically by JPA lifecycle callbacks
@@ -42,8 +42,8 @@ public class OrderMapper {
 
         return Order.reconstitute(
                 entity.getId(),
-                entity.getBuyerAccountId(),
-                entity.getSellerAccountId(),
+                entity.getBuyerProfileId(),
+                entity.getSellerProfileId(),
                 orderItems,
                 entity.getTotal(),
                 entity.getStatus(),

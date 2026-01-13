@@ -20,5 +20,21 @@ spring:
     init:
       mode: never
 
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8180/realms/openmarket
+          jwk-set-uri: http://localhost:8180/realms/openmarket/protocol/openid-connect/certs
+
 server:
   port: 8080
+
+# Keycloak configuration for IdentityProvider
+keycloak:
+  server-url: http://localhost:8180
+  realm: openmarket
+  admin-username: admin
+  admin-password: admin
+  client-id: openmarket-api
+  client-secret: openmarket-api-secret

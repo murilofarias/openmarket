@@ -27,13 +27,13 @@ public class ProductEntity extends BaseEntity {
     @Column(name = "stock", nullable = false)
     private int stock;
 
-    @Column(name = "seller_account_id", nullable = false)
-    private UUID sellerAccountId;
+    @Column(name = "seller_profile_id", nullable = false)
+    private UUID sellerProfileId;
 
     //just for navigation and not updates
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "seller_account_id", nullable = false, insertable = false, updatable = false)
-    private AccountEntity sellerAccount;
+    @JoinColumn(name = "seller_profile_id", nullable = false, insertable = false, updatable = false)
+    private SellerProfileEntity sellerProfile;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id", nullable = false)
@@ -60,17 +60,17 @@ public class ProductEntity extends BaseEntity {
     public int getStock() { return stock; }
     public void setStock(int stock) { this.stock = stock; }
 
-    public AccountEntity getSellerAccount() { return sellerAccount; }
+    public SellerProfileEntity getSellerProfile() { return sellerProfile; }
 
     public ProductStatus getStatus() { return status; }
     public void setStatus(ProductStatus status) { this.status = status; }
 
-    public UUID getSellerAccountId() {
-        return sellerAccountId;
+    public UUID getSellerProfileId() {
+        return sellerProfileId;
     }
 
-    public void setSellerAccountId(UUID sellerAccountId) {
-        this.sellerAccountId = sellerAccountId;
+    public void setSellerProfileId(UUID sellerProfileId) {
+        this.sellerProfileId = sellerProfileId;
     }
 
     public List<ProductImageEntity> getProductImages() {

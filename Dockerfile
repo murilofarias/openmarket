@@ -21,4 +21,4 @@ COPY --from=build /app/target/*.jar app.jar
 EXPOSE 8080 5005
 
 # Run the application with dev profile
-ENTRYPOINT ["java", "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005", "-jar", "app.jar", "--spring.profiles.active=dev"]
+ENTRYPOINT ["java", "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005", "-jar", "app.jar"]

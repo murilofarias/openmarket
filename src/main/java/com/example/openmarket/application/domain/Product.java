@@ -9,7 +9,7 @@ import java.util.UUID;
 public class Product {
 
     private UUID id;
-    private UUID sellerAccountId;
+    private UUID sellerProfileId;
     private String name;
     private String description;
     private BigDecimal price;
@@ -18,10 +18,10 @@ public class Product {
     private List<ProductImage> images = new ArrayList<>();
     private LocalDateTime createdAt;
 
-    private Product(UUID id, UUID sellerAccountId, String name, String description,
+    private Product(UUID id, UUID sellerProfileId, String name, String description,
                     BigDecimal price, Integer stock) {
         this.id = id;
-        this.sellerAccountId = sellerAccountId;
+        this.sellerProfileId = sellerProfileId;
         this.name = name;
         this.description = description;
         this.price = price;
@@ -30,10 +30,10 @@ public class Product {
         this.createdAt = null; // Will be set by database
     }
 
-    private Product(UUID id, UUID sellerAccountId, String name, String description, BigDecimal price, Integer stock,
+    private Product(UUID id, UUID sellerProfileId, String name, String description, BigDecimal price, Integer stock,
                     ProductStatus status, LocalDateTime createdAt) {
         this.id = id;
-        this.sellerAccountId = sellerAccountId;
+        this.sellerProfileId = sellerProfileId;
         this.name = name;
         this.description = description;
         this.price = price;
@@ -109,7 +109,7 @@ public class Product {
     }
 
     public UUID getId() { return id; }
-    public UUID getSellerAccountId() { return sellerAccountId; }
+    public UUID getSellerProfileId() { return sellerProfileId; }
     public String getName() { return name; }
     public String getDescription() { return description; }
     public BigDecimal getPrice() { return price; }

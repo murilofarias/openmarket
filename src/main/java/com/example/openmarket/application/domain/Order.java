@@ -8,38 +8,38 @@ import java.util.UUID;
 public class Order {
 
     private UUID id;
-    private final UUID buyerAccountId;
-    private final UUID sellerAccountId;
+    private final UUID buyerProfileId;
+    private final UUID sellerProfileId;
     private List<OrderItem> items;
     private BigDecimal total;
     private OrderStatus status;
     private final LocalDateTime createdAt;
 
-    public Order(UUID buyerAccountId, UUID sellerAccountId, List<OrderItem> items) {
-        this.buyerAccountId = buyerAccountId;
-        this.sellerAccountId = sellerAccountId;
+    public Order(UUID buyerProfileId, UUID sellerProfileId, List<OrderItem> items) {
+        this.buyerProfileId = buyerProfileId;
+        this.sellerProfileId = sellerProfileId;
         this.createdAt = null; // Will be set by database
         this.items = items;
         calculateTotal();
     }
 
-    public Order(UUID id, UUID buyerAccountId, UUID sellerAccountId, List<OrderItem> items, BigDecimal total, OrderStatus status, LocalDateTime createdAt) {
+    public Order(UUID id, UUID buyerProfileId, UUID sellerProfileId, List<OrderItem> items, BigDecimal total, OrderStatus status, LocalDateTime createdAt) {
         this.id = id;
-        this.buyerAccountId = buyerAccountId;
-        this.sellerAccountId = sellerAccountId;
+        this.buyerProfileId = buyerProfileId;
+        this.sellerProfileId = sellerProfileId;
         this.items = items;
         this.total = total;
         this.status = status;
         this.createdAt = createdAt;
     }
 
-    public static Order create(UUID buyerAccountId, UUID sellerAccountId, List<OrderItem> items) {
-        return new Order(buyerAccountId, sellerAccountId, items);
+    public static Order create(UUID buyerProfileId, UUID sellerProfileId, List<OrderItem> items) {
+        return new Order(buyerProfileId, sellerProfileId, items);
     }
 
-    public static Order reconstitute(UUID id, UUID buyerAccountId, UUID sellerAccountId, List<OrderItem> items,
+    public static Order reconstitute(UUID id, UUID buyerProfileId, UUID sellerProfileId, List<OrderItem> items,
                                        BigDecimal total, OrderStatus status, LocalDateTime createdAt) {
-        return new Order(id, buyerAccountId, sellerAccountId, items, total, status, createdAt);
+        return new Order(id, buyerProfileId, sellerProfileId, items, total, status, createdAt);
     }
 
     /*public void addItem(UUID productId, int quantity) {
@@ -64,8 +64,8 @@ public class Order {
     }
 
     public UUID getId() { return id; }
-    public UUID getBuyerAccountId() { return buyerAccountId; }
-    public UUID getSellerAccountId() { return sellerAccountId; }
+    public UUID getBuyerProfileId() { return buyerProfileId; }
+    public UUID getSellerProfileId() { return sellerProfileId; }
     public List<OrderItem> getItems() { return items; }
     public BigDecimal getTotal() { return total; }
     public OrderStatus getStatus() { return status; }

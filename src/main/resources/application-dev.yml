@@ -4,3 +4,14 @@ spring:
   jpa:
     hibernate:
       ddl-auto: create-drop
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://keycloak:8080/realms/openmarket
+          jwk-set-uri: http://keycloak:8080/realms/openmarket/protocol/openid-connect/certs
+
+keycloak:
+  server-url: http://keycloak:8080
+  client-id: openmarket-api
+  client-secret: openmarket-api-secret

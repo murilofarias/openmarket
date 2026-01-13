@@ -21,7 +21,7 @@ public class ProductMapper {
     public ProductEntity toEntity(Product domain) {
         ProductEntity entity = new ProductEntity();
         entity.setId(domain.getId());
-        entity.setSellerAccountId(domain.getSellerAccountId());
+        entity.setSellerProfileId(domain.getSellerProfileId());
         entity.setName(domain.getName());
         entity.setDescription(domain.getDescription());
         entity.setPrice(domain.getPrice());
@@ -40,7 +40,7 @@ public class ProductMapper {
     public Product toDomain(ProductEntity entity) {
         return Product.reconstitute(
                 entity.getId(),
-                entity.getSellerAccountId(),
+                entity.getSellerProfileId(),
                 entity.getName(),
                 entity.getDescription(),
                 entity.getPrice(),
