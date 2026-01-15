@@ -31,14 +31,10 @@ public class ProfileService {
     }
 
     /**
-     * Creates a buyer profile for an existing user in the identity provider.
+     * Creates a buyer profile for an authenticated user.
+     * Note: User existence is already guaranteed by JWT authentication.
      */
     public UUID createBuyerProfile(String userId, String defaultShippingAddress) {
-        // Verify user exists in identity provider
-        if (!identityProvider.userExists(userId)) {
-            throw new ResourceNotFoundException("User", userId);
-        }
-
         // Check if user already has a buyer profile
         if (buyerRepository.existsByUserId(userId)) {
             throw new DomainException("User already has a buyer profile");
@@ -57,14 +53,10 @@ public class ProfileService {
     }
 
     /**
-     * Creates a seller profile for an existing user in the identity provider.
+     * Creates a seller profile for an authenticated user.
+     * Note: User existence is already guaranteed by JWT authentication.
      */
     public UUID createSellerProfile(String userId, String storeName, String storeDescription) {
-        // Verify user exists in identity provider
-        if (!identityProvider.userExists(userId)) {
-            throw new ResourceNotFoundException("User", userId);
-        }
-
         // Check if user already has a seller profile
         if (sellerRepository.existsByUserId(userId)) {
             throw new DomainException("User already has a seller profile");

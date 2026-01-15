@@ -2,3 +2,14 @@ spring:
   jpa:
     hibernate:
       ddl-auto: validate
+
+logging:
+  level:
+    root: WARN
+    com.example.openmarket: INFO
+    com.example.openmarket.controller.exceptionHandler: INFO
+    org.hibernate.SQL: WARN
+  file:
+    name: /var/log/openmarket/openmarket.log
+    max-size: 50MB
+    max-history: 90

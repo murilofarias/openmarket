@@ -30,6 +30,21 @@ spring:
 server:
   port: 8080
 
+# Logging configuration
+logging:
+  level:
+    root: INFO
+    com.example.openmarket: DEBUG
+    # Log all exceptions from the exception handler
+    com.example.openmarket.controller.exceptionHandler: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/openmarket.log
+    max-size: 10MB
+    max-history: 30
+
 # Keycloak configuration for IdentityProvider
 keycloak:
   server-url: http://localhost:8180
