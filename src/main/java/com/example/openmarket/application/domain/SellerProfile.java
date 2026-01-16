@@ -2,6 +2,7 @@ package com.example.openmarket.application.domain;
 
 import com.example.openmarket.application.exception.DomainException;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -12,11 +13,11 @@ public class SellerProfile {
     private String storeName;
     private String storeDescription;
     private SellerStatus status;
-    private Double rating;
+    private BigDecimal rating;
     private final LocalDateTime createdAt;
 
     private SellerProfile(UUID id, String userId, String storeName, String storeDescription,
-                         SellerStatus status, Double rating, LocalDateTime createdAt) {
+                         SellerStatus status, BigDecimal rating, LocalDateTime createdAt) {
         this.id = id;
         this.userId = userId;
         this.storeName = storeName;
@@ -42,7 +43,7 @@ public class SellerProfile {
 
     public static SellerProfile reconstitute(UUID id, String userId, String storeName,
                                             String storeDescription, SellerStatus status,
-                                            Double rating, LocalDateTime createdAt) {
+                                            BigDecimal rating, LocalDateTime createdAt) {
         return new SellerProfile(id, userId, storeName, storeDescription, status, rating, createdAt);
     }
 
@@ -77,8 +78,8 @@ public class SellerProfile {
         this.storeDescription = storeDescription;
     }
 
-    public void updateRating(double newRating) {
-        if (newRating < 0 || newRating > 5) {
+    public void updateRating(BigDecimal newRating) {
+        if (newRating == null || newRating.compareTo(BigDecimal.ZERO) < 0 || newRating.compareTo(new BigDecimal("5")) > 0) {
             throw new DomainException("Rating must be between 0 and 5");
         }
         this.rating = newRating;
@@ -110,6 +111,6 @@ public class SellerProfile {
     public String getStoreName() { return storeName; }
     public String getStoreDescription() { return storeDescription; }
     public SellerStatus getStatus() { return status; }
-    public Double getRating() { return rating; }
+    public BigDecimal getRating() { return rating; }
     public LocalDateTime getCreatedAt() { return createdAt; }
 }

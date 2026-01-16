@@ -3,6 +3,7 @@ package com.example.openmarket.infrastructure.persistence.entity;
 import com.example.openmarket.application.domain.SellerStatus;
 import jakarta.persistence.*;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 @Entity
@@ -16,7 +17,11 @@ public class SellerProfileEntity extends BaseEntity {
     private UUID id;
 
     @Column(name = "user_id", nullable = false, unique = true)
-    private String userId;  // Keycloak subject
+    private String userId;  // Keycloak subject (externalAuthId)
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = true)
+    @JoinColumn(name = "user_id", referencedColumnName = "external_auth_id", insertable = false, updatable = false)
+    private UserEntity user;  // Optional navigation to cached User entity
 
     @Column(name = "store_name", nullable = false)
     private String storeName;
@@ -29,7 +34,7 @@ public class SellerProfileEntity extends BaseEntity {
     private SellerStatus status;
 
     @Column(name = "rating")
-    private Double rating;
+    private BigDecimal rating;
 
     public SellerProfileEntity() {}
 
@@ -50,6 +55,9 @@ public class SellerProfileEntity extends BaseEntity {
     public SellerStatus getStatus() { return status; }
     public void setStatus(SellerStatus status) { this.status = status; }
 
-    public Double getRating() { return rating; }
-    public void setRating(Double rating) { this.rating = rating; }
+    public BigDecimal getRating() { return rating; }
+    public void setRating(BigDecimal rating) { this.rating = rating; }
+
+    public UserEntity getUser() { return user; }
+    public void setUser(UserEntity user) { this.user = user; }
 }

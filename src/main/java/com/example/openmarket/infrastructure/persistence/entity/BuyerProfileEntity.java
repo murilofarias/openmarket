@@ -14,7 +14,11 @@ public class BuyerProfileEntity extends BaseEntity {
     private UUID id;
 
     @Column(name = "user_id", nullable = false, unique = true)
-    private String userId;  // Keycloak subject
+    private String userId;  // Keycloak subject (externalAuthId)
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = true)
+    @JoinColumn(name = "user_id", referencedColumnName = "external_auth_id", insertable = false, updatable = false)
+    private UserEntity user;  // Optional navigation to cached User entity
 
     @Column(name = "default_shipping_address")
     private String defaultShippingAddress;
@@ -43,4 +47,7 @@ public class BuyerProfileEntity extends BaseEntity {
 
     public Double getRating() { return rating; }
     public void setRating(Double rating) { this.rating = rating; }
+
+    public UserEntity getUser() { return user; }
+    public void setUser(UserEntity user) { this.user = user; }
 }

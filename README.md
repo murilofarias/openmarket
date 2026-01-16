@@ -117,10 +117,11 @@ docker-compose up -d postgres keycloak
 
 1. ✅ Integrate Keycloak for authentication
 2. ✅ Separate Account entity and use Profiles with userId
-4. Encapsulate all the authorization operations in AuthorizationService
-5. Create command again to encapsulate the domain logic
 6. Add search products feature
 7. Add createOrder feature
 8. Add payment integration
 9. Add order tracking
 10. Add seller approval workflow
+11. Create an authorizationService if needed
+12. Create a way to extract metrics from the system
+13. Create important test loads

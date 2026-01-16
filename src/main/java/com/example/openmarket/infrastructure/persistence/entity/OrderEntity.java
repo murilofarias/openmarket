@@ -21,6 +21,9 @@ public class OrderEntity extends BaseEntity {
     @Column(name = "status", nullable = false, length = 50)
     private OrderStatus status;
 
+    @Column(name = "metadata", columnDefinition = "TEXT")
+    private String metadata;
+
     @Column(name = "buyer_profile_id", nullable = false)
     private UUID buyerProfileId;
 
@@ -76,6 +79,14 @@ public class OrderEntity extends BaseEntity {
 
     public void setStatus(OrderStatus status) {
         this.status = status;
+    }
+
+    public String getMetadata() {
+        return metadata;
+    }
+
+    public void setMetadata(String metadata) {
+        this.metadata = metadata;
     }
 
     public void setBuyerProfileId(UUID buyerProfileId) {

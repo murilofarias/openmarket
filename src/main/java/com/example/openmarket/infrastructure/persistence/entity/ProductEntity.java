@@ -30,7 +30,6 @@ public class ProductEntity extends BaseEntity {
     @Column(name = "seller_profile_id", nullable = false)
     private UUID sellerProfileId;
 
-    //just for navigation and not updates
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "seller_profile_id", nullable = false, insertable = false, updatable = false)
     private SellerProfileEntity sellerProfile;
@@ -42,6 +41,15 @@ public class ProductEntity extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 50)
     private ProductStatus status;
+
+    @Column(name = "category", nullable = false, length = 50)
+    private String category;
+
+    @Column(name = "rating", precision = 3, scale = 2)
+    private BigDecimal rating;
+
+    @Column(name = "review_count", nullable = false)
+    private Integer reviewCount = 0;
 
     public ProductEntity() {}
 
@@ -79,5 +87,29 @@ public class ProductEntity extends BaseEntity {
 
     public void setProductImages(List<ProductImageEntity> productImages) {
         this.productImages = productImages;
+    }
+
+    public String getCategory() {
+        return category;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
+    }
+
+    public BigDecimal getRating() {
+        return rating;
+    }
+
+    public void setRating(BigDecimal rating) {
+        this.rating = rating;
+    }
+
+    public Integer getReviewCount() {
+        return reviewCount;
+    }
+
+    public void setReviewCount(Integer reviewCount) {
+        this.reviewCount = reviewCount;
     }
 }

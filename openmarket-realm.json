@@ -41,6 +41,13 @@
       "attributes": {
         "access.token.lifespan": "3600"
       },
+      "defaultClientScopes": [
+        "web-origins",
+        "acr",
+        "profile",
+        "roles",
+        "email"
+      ],
       "protocolMappers": [
         {
           "name": "realm-roles",
@@ -88,5 +95,20 @@
     "email",
     "profile",
     "roles"
+  ],
+  "users": [
+    {
+      "username": "service-account-openmarket-api",
+      "enabled": true,
+      "serviceAccountClientId": "openmarket-api",
+      "clientRoles": {
+        "realm-management": [
+          "manage-users",
+          "view-users",
+          "manage-realm",
+          "view-realm"
+        ]
+      }
+    }
   ]
 }

@@ -11,6 +11,8 @@ import com.example.openmarket.application.port.SellerProfileRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.springframework.beans.factory.annotation.Value;
+
 import java.util.List;
 import java.util.UUID;
 
@@ -21,6 +23,9 @@ public class ProfileService {
     private final BuyerProfileRepository buyerRepository;
     private final SellerProfileRepository sellerRepository;
     private final IdentityProvider identityProvider;
+
+    @Value("${app.seller.auto-approve:false}")
+    private boolean autoApproveSellers;
 
     public ProfileService(BuyerProfileRepository buyerRepository,
                          SellerProfileRepository sellerRepository,
@@ -64,6 +69,11 @@ public class ProfileService {
 
         // Create seller profile
         SellerProfile profile = SellerProfile.create(userId, storeName, storeDescription);
+
+        // Auto-approve if enabled (for dev/test environments)
+        if (autoApproveSellers) {
+            profile.approve();
+        }
 
         // Assign SELLER role in identity provider
         identityProvider.addRole(userId, "SELLER");

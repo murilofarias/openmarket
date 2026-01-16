@@ -21,16 +21,12 @@ public class SecurityConfig {
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
             .authorizeHttpRequests(auth -> auth
-                // Public endpoints
+                // Public endpoints - only authentication and health check
                 .requestMatchers("/auth/register").permitAll()
                 .requestMatchers("/auth/login").permitAll()
                 .requestMatchers("/auth/refresh").permitAll()
-                .requestMatchers("/profiles/buyer/{id}").permitAll()
-                .requestMatchers("/profiles/seller/{id}").permitAll()
                 .requestMatchers("/actuator/health").permitAll()
-                // Protected endpoints - require authentication
-                .requestMatchers("/auth/logout").authenticated()
-                .requestMatchers("/profiles/**").authenticated()
+                // All other endpoints require authentication
                 .anyRequest().authenticated()
             )
             .oauth2ResourceServer(oauth2 -> oauth2

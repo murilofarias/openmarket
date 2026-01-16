@@ -26,7 +26,10 @@ public class ProductMapper {
         entity.setDescription(domain.getDescription());
         entity.setPrice(domain.getPrice());
         entity.setStock(domain.getStock());
+        entity.setCategory(domain.getCategory());
         entity.setStatus(domain.getStatus());
+        entity.setRating(domain.getRating());
+        entity.setReviewCount(domain.getReviewCount());
         // createdAt and updatedAt will be set automatically by JPA lifecycle callbacks
 
         List<ProductImageEntity> imageEntities = domain.getImages().stream()
@@ -45,7 +48,10 @@ public class ProductMapper {
                 entity.getDescription(),
                 entity.getPrice(),
                 entity.getStock(),
+                entity.getCategory(),
                 entity.getStatus(),
+                entity.getRating(),
+                entity.getReviewCount(),
                 entity.getCreatedAt()
         );
     }

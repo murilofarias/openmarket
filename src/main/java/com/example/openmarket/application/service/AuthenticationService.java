@@ -1,6 +1,8 @@
 package com.example.openmarket.application.service;
 
+import com.example.openmarket.application.domain.User;
 import com.example.openmarket.application.port.IdentityProvider;
+import com.example.openmarket.application.port.UserRepository;
 import com.example.openmarket.controller.dto.response.LoginResponse;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
@@ -22,6 +24,7 @@ public class AuthenticationService {
 
     private final IdentityProvider identityProvider;
     private final RestTemplate restTemplate;
+    private final UserRepository userRepository;
 
     @Value("${keycloak.server-url}")
     private String keycloakServerUrl;
@@ -38,9 +41,12 @@ public class AuthenticationService {
     private String tokenUrl;
     private String logoutUrl;
 
-    public AuthenticationService(IdentityProvider identityProvider, RestTemplate restTemplate) {
+    public AuthenticationService(IdentityProvider identityProvider,
+                                RestTemplate restTemplate,
+                                UserRepository userRepository) {
         this.identityProvider = identityProvider;
         this.restTemplate = restTemplate;
+        this.userRepository = userRepository;
     }
 
     @PostConstruct
@@ -50,7 +56,7 @@ public class AuthenticationService {
     }
 
     /**
-     * Registers a new user in the identity provider.
+     * Registers a new user in the identity provider and creates a local User cache.
      *
      * @param email User's email
      * @param password User's password
@@ -58,7 +64,14 @@ public class AuthenticationService {
      * @return The userId (subject) from the identity provider
      */
     public String registerUser(String email, String password, String name) {
-        return identityProvider.createUser(email, password, name);
+        // Create user in Keycloak
+        String externalAuthId = identityProvider.createUser(email, password, name);
+
+        // Create local User entity cache to avoid frequent Keycloak API calls
+        User user = User.create(externalAuthId, email, name);
+        userRepository.save(user);
+
+        return externalAuthId;
     }
 
     /**

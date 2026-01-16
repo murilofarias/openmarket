@@ -29,14 +29,11 @@ public class KeycloakIdentityProvider implements IdentityProvider {
     @Value("${keycloak.realm}")
     private String realm;
 
-    @Value("${keycloak.admin-username}")
-    private String adminUsername;
-
-    @Value("${keycloak.admin-password}")
-    private String adminPassword;
-
-    @Value("${keycloak.client-id:admin-cli}")
+    @Value("${keycloak.client-id:openmarket-api}")
     private String clientId;
+
+    @Value("${keycloak.client-secret}")
+    private String clientSecret;
 
     private Keycloak keycloak;
     private RealmResource realmResource;
@@ -45,10 +42,10 @@ public class KeycloakIdentityProvider implements IdentityProvider {
     public void init() {
         this.keycloak = KeycloakBuilder.builder()
             .serverUrl(serverUrl)
-            .realm("master")  // Admin client connects to master realm
+            .realm(realm)
             .clientId(clientId)
-            .username(adminUsername)
-            .password(adminPassword)
+            .clientSecret(clientSecret)
+            .grantType(org.keycloak.OAuth2Constants.CLIENT_CREDENTIALS)
             .build();
 
         this.realmResource = keycloak.realm(realm);

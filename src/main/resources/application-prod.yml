@@ -9,6 +9,8 @@ logging:
     com.example.openmarket: INFO
     com.example.openmarket.controller.exceptionHandler: INFO
     org.hibernate.SQL: WARN
+  pattern:
+    console: ""  # Disable console logging in production
   file:
     name: /var/log/openmarket/openmarket.log
     max-size: 50MB
