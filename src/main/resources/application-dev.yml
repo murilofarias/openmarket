@@ -20,3 +20,6 @@ keycloak:
 app:
   seller:
     auto-approve: true
+  storage:
+    upload-dir: ./uploads
+    base-url: http://localhost:8080/images

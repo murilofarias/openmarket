@@ -12,7 +12,7 @@ public class OrderItemMapper {
         entity.setProductId(domain.getProductId());
         entity.setProductName(domain.getProductName());
         entity.setProductDescription(domain.getProductDescription());
-        entity.setProductImageUrl(domain.getProductImageUrl());
+        entity.setProductImageFilename(domain.getProductImageFilename());
         entity.setQuantity(domain.getQuantity());
         entity.setPrice(domain.getPrice());
         return entity;
@@ -23,7 +23,7 @@ public class OrderItemMapper {
                 entity.getProductId(),
                 entity.getProductName(),
                 entity.getProductDescription(),
-                entity.getProductImageUrl(),
+                entity.getProductImageFilename(),
                 entity.getQuantity(),
                 entity.getPrice()
         );

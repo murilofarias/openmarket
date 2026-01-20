@@ -37,7 +37,8 @@ public class Product {
     }
 
     private Product(UUID id, UUID sellerProfileId, String name, String description, BigDecimal price, Integer stock,
-                    String category, ProductStatus status, BigDecimal rating, Integer reviewCount, LocalDateTime createdAt) {
+                    String category, ProductStatus status, BigDecimal rating, Integer reviewCount,
+                    List<ProductImage> images, LocalDateTime createdAt) {
         this.id = id;
         this.sellerProfileId = sellerProfileId;
         this.name = name;
@@ -48,6 +49,7 @@ public class Product {
         this.status = status;
         this.rating = rating;
         this.reviewCount = reviewCount;
+        this.images = images != null ? new ArrayList<>(images) : new ArrayList<>();
         this.createdAt = createdAt;
     }
 
@@ -61,8 +63,8 @@ public class Product {
 
     public static Product reconstitute(UUID id, UUID sellerProfileId, String name, String description, BigDecimal price,
                                        Integer stock, String category, ProductStatus status, BigDecimal rating,
-                                       Integer reviewCount, LocalDateTime createdAt) {
-        return new Product(id, sellerProfileId, name, description, price, stock, category, status, rating, reviewCount, createdAt);
+                                       Integer reviewCount, List<ProductImage> images, LocalDateTime createdAt) {
+        return new Product(id, sellerProfileId, name, description, price, stock, category, status, rating, reviewCount, images, createdAt);
     }
 
     // Business logic
@@ -179,13 +181,13 @@ public class Product {
         }
     }
 
-    public void addImage(String url) {
+    public void addImage(String filename) {
         if (images.size() >= 5) {
             throw new IllegalStateException("Maximum 5 images allowed");
         }
 
         boolean primary = images.isEmpty();
-        images.add(new ProductImage(url, images.size(), primary));
+        images.add(new ProductImage(filename, images.size(), primary));
     }
 
     public UUID getId() { return id; }

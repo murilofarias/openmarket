@@ -10,14 +10,14 @@ import java.util.UUID;
 public class OrderItem {
 
     private UUID productId;
-    private String productName;         // Product name at time of purchase
-    private String productDescription;  // Product description at time of purchase (optional)
-    private String productImageUrl;     // Primary product image URL at time of purchase (optional)
+    private String productName;              // Product name at time of purchase
+    private String productDescription;       // Product description at time of purchase (optional)
+    private String productImageFilename;     // Primary product image filename at time of purchase (optional)
     private int quantity;
-    private BigDecimal price;           // Price per unit at time of purchase
+    private BigDecimal price;                // Price per unit at time of purchase
 
     public OrderItem(UUID productId, String productName, String productDescription,
-                     String productImageUrl, int quantity, BigDecimal priceAtPurchase) {
+                     String productImageFilename, int quantity, BigDecimal priceAtPurchase) {
         validateProductId(productId);
         validateProductName(productName);
         validateQuantity(quantity);
@@ -26,7 +26,7 @@ public class OrderItem {
         this.productId = productId;
         this.productName = productName;
         this.productDescription = productDescription;
-        this.productImageUrl = productImageUrl;
+        this.productImageFilename = productImageFilename;
         this.quantity = quantity;
         this.price = priceAtPurchase;
     }
@@ -64,7 +64,7 @@ public class OrderItem {
     public UUID getProductId() { return productId; }
     public String getProductName() { return productName; }
     public String getProductDescription() { return productDescription; }
-    public String getProductImageUrl() { return productImageUrl; }
+    public String getProductImageFilename() { return productImageFilename; }
     public Integer getQuantity() { return quantity; }
     public BigDecimal getPrice() { return price; }
 }

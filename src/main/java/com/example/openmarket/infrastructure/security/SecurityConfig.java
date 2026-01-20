@@ -2,6 +2,7 @@ package com.example.openmarket.infrastructure.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -21,11 +22,13 @@ public class SecurityConfig {
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
             .authorizeHttpRequests(auth -> auth
-                // Public endpoints - only authentication and health check
+                // Public endpoints - authentication and health check
                 .requestMatchers("/auth/register").permitAll()
                 .requestMatchers("/auth/login").permitAll()
                 .requestMatchers("/auth/refresh").permitAll()
                 .requestMatchers("/actuator/health").permitAll()
+                // Public image access (GET only)
+                .requestMatchers(HttpMethod.GET, "/images/**").permitAll()
                 // All other endpoints require authentication
                 .anyRequest().authenticated()
             )

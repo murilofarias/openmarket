@@ -10,6 +10,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -19,40 +20,34 @@ import java.util.UUID;
 @Transactional
 public class ProductService {
 
+    private static final int MAX_IMAGES_PER_PRODUCT = 5;
+
     private final ProductRepository productRepository;
     private final SellerProfileRepository sellerRepository;
+    private final ImageService imageService;
 
     public ProductService(ProductRepository productRepository,
-                         SellerProfileRepository sellerRepository) {
+                         SellerProfileRepository sellerRepository,
+                         ImageService imageService) {
         this.productRepository = productRepository;
         this.sellerRepository = sellerRepository;
+        this.imageService = imageService;
     }
 
     /**
      * Create new product (seller only, must be ACTIVE)
      */
     public UUID createProduct(String userId, String name, String description,
-                             BigDecimal price, Integer stock, String category,
-                             List<String> imageUrls) {
-        // Get seller profile
+                             BigDecimal price, Integer stock, String category) {
         SellerProfile seller = sellerRepository.findByUserId(userId)
             .orElseThrow(() -> new DomainException("User does not have a seller profile"));
 
-        // Verify seller is active
         if (!seller.isActive()) {
             throw new DomainException("Only active sellers can create products. Your seller account status is: " + seller.getStatus());
         }
 
-        // Create product
         Product product = Product.create(seller.getId(), name, description,
                                         price, stock, category);
-
-        // Add images if provided
-        if (imageUrls != null && !imageUrls.isEmpty()) {
-            for (String imageUrl : imageUrls) {
-                product.addImage(imageUrl);
-            }
-        }
 
         Product saved = productRepository.save(product);
         return saved.getId();
@@ -152,5 +147,39 @@ public class ProductService {
     @Transactional(readOnly = true)
     public List<Product> findProductsBySeller(UUID sellerProfileId) {
         return productRepository.findBySellerId(sellerProfileId);
+    }
+
+    /**
+     * Add image to product (seller only, must own product).
+     * Validates ownership and image limit BEFORE uploading the file.
+     *
+     * @return the URL of the uploaded image
+     */
+    public String addImageToProduct(UUID productId, String userId, MultipartFile file) {
+        SellerProfile seller = sellerRepository.findByUserId(userId)
+            .orElseThrow(() -> new DomainException("User does not have a seller profile"));
+
+        if (!seller.isActive()) {
+            throw new DomainException("Only active sellers can add images to products");
+        }
+
+        Product product = productRepository.findById(productId)
+            .orElseThrow(() -> new ResourceNotFoundException("Product", productId.toString()));
+
+        if (!product.getSellerProfileId().equals(seller.getId())) {
+            throw new DomainException("You can only add images to your own products");
+        }
+
+        if (product.getImages().size() >= MAX_IMAGES_PER_PRODUCT) {
+            throw new DomainException("Maximum " + MAX_IMAGES_PER_PRODUCT + " images allowed per product");
+        }
+
+        // All validations passed, now upload the image
+        String imageUrl = imageService.uploadImage(file);
+
+        product.addImage(imageUrl);
+        productRepository.save(product);
+
+        return imageUrl;
     }
 }

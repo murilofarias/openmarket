@@ -41,6 +41,10 @@ public class ProductMapper {
     }
 
     public Product toDomain(ProductEntity entity) {
+        List<ProductImage> images = entity.getProductImages().stream()
+                .map(productImageMapper::toDomain)
+                .collect(Collectors.toList());
+
         return Product.reconstitute(
                 entity.getId(),
                 entity.getSellerProfileId(),
@@ -52,6 +56,7 @@ public class ProductMapper {
                 entity.getStatus(),
                 entity.getRating(),
                 entity.getReviewCount(),
+                images,
                 entity.getCreatedAt()
         );
     }

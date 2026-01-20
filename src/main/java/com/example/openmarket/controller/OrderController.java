@@ -16,6 +16,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.util.List;
 import java.util.UUID;
@@ -136,14 +137,27 @@ public class OrderController {
     }
 
     private OrderResponse.OrderItemResponse toOrderItemResponse(OrderItem item) {
+        String imageUrl = buildImageUrl(item.getProductImageFilename());
+
         return new OrderResponse.OrderItemResponse(
             item.getProductId(),
             item.getProductName(),
             item.getProductDescription(),
-            item.getProductImageUrl(),
+            imageUrl,
             item.getQuantity(),
             item.getPrice(),
             item.getSubtotal()
         );
+    }
+
+    private String buildImageUrl(String filename) {
+        if (filename == null) {
+            return null;
+        }
+        return ServletUriComponentsBuilder
+            .fromCurrentContextPath()
+            .path("/images/{filename}")
+            .buildAndExpand(filename)
+            .toUriString();
     }
 }

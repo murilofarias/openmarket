@@ -7,16 +7,19 @@ import com.example.openmarket.application.service.ProductService;
 import com.example.openmarket.controller.dto.request.CreateProductRequest;
 import com.example.openmarket.controller.dto.request.UpdateProductRequest;
 import com.example.openmarket.controller.dto.response.CreateProductResponse;
+import com.example.openmarket.controller.dto.response.ImageUploadResponse;
 import com.example.openmarket.controller.dto.response.ProductResponse;
 import com.example.openmarket.infrastructure.security.CurrentUser;
 import jakarta.validation.Valid;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.math.BigDecimal;
@@ -28,6 +31,8 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/products")
 public class ProductController {
+
+    private static final Logger logger = LoggerFactory.getLogger(ProductController.class);
 
     private final ProductService productService;
 
@@ -86,8 +91,7 @@ public class ProductController {
             request.getDescription(),
             request.getPrice(),
             request.getStock(),
-            request.getCategory(),
-            request.getImageUrls()
+            request.getCategory()
         );
 
         return ResponseEntity
@@ -140,12 +144,35 @@ public class ProductController {
         return ResponseEntity.noContent().build();
     }
 
+    /**
+     * Upload image for product (PROTECTED - seller only, must own product)
+     * POST /products/{id}/images
+     */
+    @PostMapping("/{id}/images")
+    public ResponseEntity<ImageUploadResponse> uploadProductImage(
+            @PathVariable UUID id,
+            @RequestParam("file") MultipartFile file,
+            @CurrentUser AuthenticatedUser user) {
+
+        logger.debug("Image upload requested for product {} by user: {}", id, user.getUserId());
+
+        String filename = productService.addImageToProduct(id, user.getUserId(), file);
+        String url = buildImageUrl(filename);
+
+        logger.info("Image uploaded successfully for product {} by user {}: {}",
+                    id, user.getUserId(), filename);
+
+        return ResponseEntity
+            .status(HttpStatus.CREATED)
+            .body(new ImageUploadResponse(url, filename));
+    }
+
     // Helper methods to map domain to DTO
 
     private ProductResponse toProductResponse(Product product) {
         List<ProductResponse.ProductImageDto> imageDtos = product.getImages().stream()
             .map(img -> new ProductResponse.ProductImageDto(
-                img.getUrl(),
+                buildImageUrl(img.getFilename()),
                 img.getPosition(),
                 img.isPrimary()
             ))
@@ -177,7 +204,7 @@ public class ProductController {
 
         List<ProductResponse.ProductImageDto> imageDtos = product.getImages().stream()
             .map(img -> new ProductResponse.ProductImageDto(
-                img.getUrl(),
+                buildImageUrl(img.getFilename()),
                 img.getPosition(),
                 img.isPrimary()
             ))
@@ -197,5 +224,13 @@ public class ProductController {
             sellerInfo,
             product.getCreatedAt()
         );
+    }
+
+    private String buildImageUrl(String filename) {
+        return ServletUriComponentsBuilder
+            .fromCurrentContextPath()
+            .path("/images/{filename}")
+            .buildAndExpand(filename)
+            .toUriString();
     }
 }

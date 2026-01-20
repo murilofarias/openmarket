@@ -3,7 +3,6 @@ package com.example.openmarket.controller.dto.request;
 import jakarta.validation.constraints.*;
 
 import java.math.BigDecimal;
-import java.util.List;
 
 public class CreateProductRequest {
 
@@ -25,9 +24,6 @@ public class CreateProductRequest {
     @NotBlank(message = "Category is required")
     @Size(min = 3, max = 50, message = "Category must be between 3 and 50 characters")
     private String category;
-
-    @Size(max = 5, message = "Maximum 5 images allowed")
-    private List<@NotBlank(message = "Image URL cannot be blank") @Size(max = 500, message = "Image URL must not exceed 500 characters") String> imageUrls;
 
     public CreateProductRequest() {}
 
@@ -69,13 +65,5 @@ public class CreateProductRequest {
 
     public void setCategory(String category) {
         this.category = category;
-    }
-
-    public List<String> getImageUrls() {
-        return imageUrls;
-    }
-
-    public void setImageUrls(List<String> imageUrls) {
-        this.imageUrls = imageUrls;
     }
 }

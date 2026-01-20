@@ -61,19 +61,19 @@ public class OrderService {
                 throw new DomainException("Insufficient stock for product: " + product.getName());
             }
 
-            // Get primary image URL (or null if no images)
-            String imageUrl = product.getImages().stream()
+            // Get primary image filename (or null if no primary image)
+            String imageFilename = product.getImages().stream()
                 .filter(ProductImage::isPrimary)
                 .findFirst()
-                .map(ProductImage::getUrl)
-                .orElse(product.getImages().isEmpty() ? null : product.getImages().get(0).getUrl());
+                .map(ProductImage::getFilename)
+                .orElse(null);
 
             // Create order item with product snapshot
             OrderItem orderItem = new OrderItem(
                 product.getId(),
                 product.getName(),
                 product.getDescription(),
-                imageUrl,
+                imageFilename,
                 itemRequest.getQuantity(),
                 product.getPrice()
             );

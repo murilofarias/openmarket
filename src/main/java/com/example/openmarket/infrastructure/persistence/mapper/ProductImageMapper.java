@@ -9,7 +9,7 @@ public class ProductImageMapper {
 
     public ProductImageEntity toEntity(ProductImage domain) {
         ProductImageEntity entity = new ProductImageEntity();
-        entity.setUrl(domain.getUrl());
+        entity.setFilename(domain.getFilename());
         entity.setPosition(domain.getPosition());
         entity.setPrimary(domain.isPrimary());
         return entity;
@@ -17,7 +17,7 @@ public class ProductImageMapper {
 
     public ProductImage toDomain(ProductImageEntity entity) {
         return new ProductImage(
-                entity.getUrl(),
+                entity.getFilename(),
                 entity.getPosition(),
                 entity.isPrimary()
         );

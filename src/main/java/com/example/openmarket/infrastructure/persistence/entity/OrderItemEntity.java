@@ -23,8 +23,8 @@ public class OrderItemEntity {
     @Column(name = "product_description", columnDefinition = "TEXT")
     private String productDescription;
 
-    @Column(name = "product_image_url", length = 500)
-    private String productImageUrl;
+    @Column(name = "product_image_filename", length = 255)
+    private String productImageFilename;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id", nullable = false, insertable = false, updatable = false)
@@ -70,12 +70,12 @@ public class OrderItemEntity {
         this.productDescription = productDescription;
     }
 
-    public String getProductImageUrl() {
-        return productImageUrl;
+    public String getProductImageFilename() {
+        return productImageFilename;
     }
 
-    public void setProductImageUrl(String productImageUrl) {
-        this.productImageUrl = productImageUrl;
+    public void setProductImageFilename(String productImageFilename) {
+        this.productImageFilename = productImageFilename;
     }
 
     public ProductEntity getProduct() {

@@ -1,6 +1,12 @@
 spring:
   application:
     name: openmarket
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 10MB
+      max-request-size: 15MB
+      file-size-threshold: 2KB
   datasource:
     url: jdbc:postgresql://localhost:5432/openmarket
     username: openmarket_user
@@ -53,3 +59,10 @@ keycloak:
   admin-password: admin
   client-id: openmarket-api
   client-secret: openmarket-api-secret
+
+# Application-specific configuration
+app:
+  storage:
+    upload-dir: ./uploads
+    base-url: http://localhost:8080/images
+    max-file-size: 10485760
