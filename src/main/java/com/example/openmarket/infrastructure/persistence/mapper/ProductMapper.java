@@ -21,12 +21,15 @@ public class ProductMapper {
     public ProductEntity toEntity(Product domain) {
         ProductEntity entity = new ProductEntity();
         entity.setId(domain.getId());
-        entity.setSellerAccountId(domain.getSellerAccountId());
+        entity.setSellerProfileId(domain.getSellerProfileId());
         entity.setName(domain.getName());
         entity.setDescription(domain.getDescription());
         entity.setPrice(domain.getPrice());
         entity.setStock(domain.getStock());
+        entity.setCategory(domain.getCategory());
         entity.setStatus(domain.getStatus());
+        entity.setRating(domain.getRating());
+        entity.setReviewCount(domain.getReviewCount());
         // createdAt and updatedAt will be set automatically by JPA lifecycle callbacks
 
         List<ProductImageEntity> imageEntities = domain.getImages().stream()
@@ -38,14 +41,22 @@ public class ProductMapper {
     }
 
     public Product toDomain(ProductEntity entity) {
+        List<ProductImage> images = entity.getProductImages().stream()
+                .map(productImageMapper::toDomain)
+                .collect(Collectors.toList());
+
         return Product.reconstitute(
                 entity.getId(),
-                entity.getSellerAccountId(),
+                entity.getSellerProfileId(),
                 entity.getName(),
                 entity.getDescription(),
                 entity.getPrice(),
                 entity.getStock(),
+                entity.getCategory(),
                 entity.getStatus(),
+                entity.getRating(),
+                entity.getReviewCount(),
+                images,
                 entity.getCreatedAt()
         );
     }

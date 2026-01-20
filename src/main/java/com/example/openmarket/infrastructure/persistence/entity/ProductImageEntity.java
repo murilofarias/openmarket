@@ -11,8 +11,8 @@ public class ProductImageEntity {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(name = "url", nullable = false, length = 500)
-    private String url;
+    @Column(name = "filename", nullable = false, length = 255)
+    private String filename;
 
     @Column(name = "position", nullable = false)
     private int position;
@@ -30,12 +30,12 @@ public class ProductImageEntity {
         this.id = id;
     }
 
-    public String getUrl() {
-        return url;
+    public String getFilename() {
+        return filename;
     }
 
-    public void setUrl(String url) {
-        this.url = url;
+    public void setFilename(String filename) {
+        this.filename = filename;
     }
 
     public int getPosition() {

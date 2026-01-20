@@ -14,6 +14,9 @@ RUN mvn clean package -DskipTests
 FROM eclipse-temurin:21-jre-jammy
 WORKDIR /app
 
+# Create logs directory
+RUN mkdir -p /app/logs
+
 # Copy the built jar from build stage
 COPY --from=build /app/target/*.jar app.jar
 
@@ -21,4 +24,4 @@ COPY --from=build /app/target/*.jar app.jar
 EXPOSE 8080 5005
 
 # Run the application with dev profile
-ENTRYPOINT ["java", "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005", "-jar", "app.jar", "--spring.profiles.active=dev"]
+ENTRYPOINT ["java", "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005", "-jar", "app.jar"]

@@ -21,23 +21,26 @@ public class OrderEntity extends BaseEntity {
     @Column(name = "status", nullable = false, length = 50)
     private OrderStatus status;
 
-    @Column(name = "buyer_account_id", nullable = false)
-    private UUID buyerAccountId;
+    @Column(name = "metadata", columnDefinition = "TEXT")
+    private String metadata;
 
-    @Column(name = "seller_account_id", nullable = false)
-    private UUID sellerAccountId;
+    @Column(name = "buyer_profile_id", nullable = false)
+    private UUID buyerProfileId;
+
+    @Column(name = "seller_profile_id", nullable = false)
+    private UUID sellerProfileId;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "order_id", nullable = false)
     private List<OrderItemEntity> orderItems = new ArrayList<>();
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "buyer_account_id", nullable = false, insertable = false, updatable = false)
-    private AccountEntity buyer;
+    @JoinColumn(name = "buyer_profile_id", nullable = false, insertable = false, updatable = false)
+    private BuyerProfileEntity buyer;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "seller_account_id", nullable = false, insertable = false, updatable = false)
-    private AccountEntity seller;
+    @JoinColumn(name = "seller_profile_id", nullable = false, insertable = false, updatable = false)
+    private SellerProfileEntity seller;
 
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }
@@ -50,23 +53,23 @@ public class OrderEntity extends BaseEntity {
         return status;
     }
 
-    public UUID getBuyerAccountId() {
-        return buyerAccountId;
+    public UUID getBuyerProfileId() {
+        return buyerProfileId;
     }
 
-    public UUID getSellerAccountId() {
-        return sellerAccountId;
+    public UUID getSellerProfileId() {
+        return sellerProfileId;
     }
 
     public List<OrderItemEntity> getOrderItems() {
         return orderItems;
     }
 
-    public AccountEntity getBuyer() {
+    public BuyerProfileEntity getBuyer() {
         return buyer;
     }
 
-    public AccountEntity getSeller() {
+    public SellerProfileEntity getSeller() {
         return seller;
     }
 
@@ -78,12 +81,20 @@ public class OrderEntity extends BaseEntity {
         this.status = status;
     }
 
-    public void setBuyerAccountId(UUID buyerAccountId) {
-        this.buyerAccountId = buyerAccountId;
+    public String getMetadata() {
+        return metadata;
     }
 
-    public void setSellerAccountId(UUID sellerAccountId) {
-        this.sellerAccountId = sellerAccountId;
+    public void setMetadata(String metadata) {
+        this.metadata = metadata;
+    }
+
+    public void setBuyerProfileId(UUID buyerProfileId) {
+        this.buyerProfileId = buyerProfileId;
+    }
+
+    public void setSellerProfileId(UUID sellerProfileId) {
+        this.sellerProfileId = sellerProfileId;
     }
 
     public void setOrderItems(List<OrderItemEntity> orderItems) {

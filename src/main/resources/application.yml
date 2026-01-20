@@ -1,6 +1,12 @@
 spring:
   application:
     name: openmarket
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 10MB
+      max-request-size: 15MB
+      file-size-threshold: 2KB
   datasource:
     url: jdbc:postgresql://localhost:5432/openmarket
     username: openmarket_user
@@ -20,5 +26,43 @@ spring:
     init:
       mode: never
 
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8180/realms/openmarket
+          jwk-set-uri: http://localhost:8180/realms/openmarket/protocol/openid-connect/certs
+
 server:
   port: 8080
+
+# Logging configuration
+logging:
+  level:
+    root: INFO
+    com.example.openmarket: DEBUG
+    # Log all exceptions from the exception handler
+    com.example.openmarket.controller.exceptionHandler: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/openmarket.log
+    max-size: 10MB
+    max-history: 30
+
+# Keycloak configuration for IdentityProvider
+keycloak:
+  server-url: http://localhost:8180
+  realm: openmarket
+  admin-username: admin
+  admin-password: admin
+  client-id: openmarket-api
+  client-secret: openmarket-api-secret
+
+# Application-specific configuration
+app:
+  storage:
+    upload-dir: ./uploads
+    base-url: http://localhost:8080/images
+    max-file-size: 10485760

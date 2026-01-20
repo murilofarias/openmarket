@@ -9,50 +9,62 @@ import java.util.UUID;
 public class Product {
 
     private UUID id;
-    private UUID sellerAccountId;
+    private UUID sellerProfileId;
     private String name;
     private String description;
     private BigDecimal price;
     private Integer stock;
+    private String category;
     private ProductStatus status;
+    private BigDecimal rating;
+    private Integer reviewCount;
     private List<ProductImage> images = new ArrayList<>();
     private LocalDateTime createdAt;
 
-    private Product(UUID id, UUID sellerAccountId, String name, String description,
-                    BigDecimal price, Integer stock) {
+    private Product(UUID id, UUID sellerProfileId, String name, String description,
+                    BigDecimal price, Integer stock, String category) {
         this.id = id;
-        this.sellerAccountId = sellerAccountId;
+        this.sellerProfileId = sellerProfileId;
         this.name = name;
         this.description = description;
         this.price = price;
         this.stock = stock;
+        this.category = category;
         this.status = ProductStatus.DRAFT;
+        this.rating = null;
+        this.reviewCount = 0;
         this.createdAt = null; // Will be set by database
     }
 
-    private Product(UUID id, UUID sellerAccountId, String name, String description, BigDecimal price, Integer stock,
-                    ProductStatus status, LocalDateTime createdAt) {
+    private Product(UUID id, UUID sellerProfileId, String name, String description, BigDecimal price, Integer stock,
+                    String category, ProductStatus status, BigDecimal rating, Integer reviewCount,
+                    List<ProductImage> images, LocalDateTime createdAt) {
         this.id = id;
-        this.sellerAccountId = sellerAccountId;
+        this.sellerProfileId = sellerProfileId;
         this.name = name;
         this.description = description;
         this.price = price;
         this.stock = stock;
+        this.category = category;
         this.status = status;
+        this.rating = rating;
+        this.reviewCount = reviewCount;
+        this.images = images != null ? new ArrayList<>(images) : new ArrayList<>();
         this.createdAt = createdAt;
     }
 
     public static Product create(UUID sellerProfileId, String name, String description,
-                                 BigDecimal price, Integer stock) {
+                                 BigDecimal price, Integer stock, String category) {
         validatePrice(price);
         validateStock(stock);
-        return new Product(UUID.randomUUID(), sellerProfileId, name, description, price, stock);
+        validateCategory(category);
+        return new Product(UUID.randomUUID(), sellerProfileId, name, description, price, stock, category);
     }
 
     public static Product reconstitute(UUID id, UUID sellerProfileId, String name, String description, BigDecimal price,
-                                       Integer stock,
-                                       ProductStatus status, LocalDateTime createdAt) {
-        return new Product(id, sellerProfileId, name, description, price, stock, status, createdAt);
+                                       Integer stock, String category, ProductStatus status, BigDecimal rating,
+                                       Integer reviewCount, List<ProductImage> images, LocalDateTime createdAt) {
+        return new Product(id, sellerProfileId, name, description, price, stock, category, status, rating, reviewCount, images, createdAt);
     }
 
     // Business logic
@@ -67,6 +79,18 @@ public class Product {
 
         if (stock == 0) {
             this.status = ProductStatus.OUT_OF_STOCK;
+        }
+    }
+
+    public void addStock(int quantity) {
+        if (quantity <= 0) {
+            throw new IllegalArgumentException("Quantity must be positive");
+        }
+        stock += quantity;
+
+        // If product was out of stock, reactivate it
+        if (this.status == ProductStatus.OUT_OF_STOCK && stock > 0) {
+            this.status = ProductStatus.ACTIVE;
         }
     }
 
@@ -86,6 +110,55 @@ public class Product {
         return status == ProductStatus.ACTIVE && stock > 0;
     }
 
+    public void updateCategory(String category) {
+        validateCategory(category);
+        this.category = category;
+    }
+
+    public void updateFromRequest(String name, String description, BigDecimal price,
+                                   Integer stock, String category) {
+        if (name != null) {
+            this.name = name;
+        }
+        if (description != null) {
+            this.description = description;
+        }
+        if (price != null) {
+            validatePrice(price);
+            this.price = price;
+        }
+        if (stock != null) {
+            validateStock(stock);
+            this.stock = stock;
+            // Update status based on stock
+            if (this.stock == 0) {
+                this.status = ProductStatus.OUT_OF_STOCK;
+            } else if (this.status == ProductStatus.OUT_OF_STOCK) {
+                this.status = ProductStatus.ACTIVE;
+            }
+        }
+        if (category != null) {
+            validateCategory(category);
+            this.category = category;
+        }
+    }
+
+    public void recalculateRating(BigDecimal averageRating, int count) {
+        if (count < 0) {
+            throw new IllegalArgumentException("Review count cannot be negative");
+        }
+        if (count == 0) {
+            this.rating = null;
+            this.reviewCount = 0;
+        } else {
+            if (averageRating == null || averageRating.compareTo(BigDecimal.ZERO) < 0 || averageRating.compareTo(new BigDecimal("5")) > 0) {
+                throw new IllegalArgumentException("Rating must be between 0 and 5");
+            }
+            this.rating = averageRating;
+            this.reviewCount = count;
+        }
+    }
+
     // Validation
     private static void validatePrice(BigDecimal price) {
         if (price == null || price.compareTo(new BigDecimal(0)) <= 0) {
@@ -99,22 +172,34 @@ public class Product {
         }
     }
 
-    public void addImage(String url) {
+    private static void validateCategory(String category) {
+        if (category == null || category.trim().isEmpty()) {
+            throw new IllegalArgumentException("Category cannot be empty");
+        }
+        if (category.length() < 3 || category.length() > 50) {
+            throw new IllegalArgumentException("Category must be between 3 and 50 characters");
+        }
+    }
+
+    public void addImage(String filename) {
         if (images.size() >= 5) {
             throw new IllegalStateException("Maximum 5 images allowed");
         }
 
         boolean primary = images.isEmpty();
-        images.add(new ProductImage(url, images.size(), primary));
+        images.add(new ProductImage(filename, images.size(), primary));
     }
 
     public UUID getId() { return id; }
-    public UUID getSellerAccountId() { return sellerAccountId; }
+    public UUID getSellerProfileId() { return sellerProfileId; }
     public String getName() { return name; }
     public String getDescription() { return description; }
     public BigDecimal getPrice() { return price; }
     public Integer getStock() { return stock; }
+    public String getCategory() { return category; }
     public ProductStatus getStatus() { return status; }
+    public BigDecimal getRating() { return rating; }
+    public Integer getReviewCount() { return reviewCount; }
     public List<ProductImage> getImages() { return images; }
     public LocalDateTime getCreatedAt() { return createdAt; }
 }
