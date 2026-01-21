@@ -1,0 +1,97 @@
+heartbeat.config:
+  monitors:
+    path: ${path.config}/monitors.d/*.yml
+    reload.enabled: false
+
+# =========================== Monitors Configuration ===========================
+
+heartbeat.monitors:
+
+# -------------------------------- OpenMarket API --------------------------------
+- type: http
+  id: openmarket-api
+  name: OpenMarket API
+  schedule: '@every 10s'
+  hosts: ["http://app:8080/actuator/health"]
+  check.request:
+    method: GET
+  check.response:
+    status: [200]
+  timeout: 5s
+  tags: ["openmarket", "api", "spring-boot"]
+
+# -------------------------------- Keycloak --------------------------------
+- type: http
+  id: keycloak
+  name: Keycloak Identity Provider
+  schedule: '@every 10s'
+  hosts: ["http://keycloak:8080/health/ready"]
+  check.request:
+    method: GET
+  check.response:
+    status: [200]
+  timeout: 5s
+  tags: ["openmarket", "keycloak", "identity"]
+
+# -------------------------------- PostgreSQL --------------------------------
+- type: tcp
+  id: postgresql
+  name: PostgreSQL Database
+  schedule: '@every 10s'
+  hosts: ["postgres:5432"]
+  timeout: 5s
+  tags: ["openmarket", "postgres", "database"]
+
+# -------------------------------- Elasticsearch --------------------------------
+- type: http
+  id: elasticsearch
+  name: Elasticsearch
+  schedule: '@every 30s'
+  hosts: ["http://elasticsearch:9200/_cluster/health"]
+  check.request:
+    method: GET
+  check.response:
+    status: [200]
+  timeout: 10s
+  tags: ["observability", "elasticsearch"]
+
+# -------------------------------- Kibana --------------------------------
+- type: http
+  id: kibana
+  name: Kibana
+  schedule: '@every 30s'
+  hosts: ["http://kibana:5601/api/status"]
+  check.request:
+    method: GET
+  check.response:
+    status: [200]
+  timeout: 10s
+  tags: ["observability", "kibana"]
+
+# =========================== Elasticsearch Output ===========================
+output.elasticsearch:
+  hosts: ["elasticsearch:9200"]
+  protocol: "http"
+
+# =========================== Setup ===========================
+setup.template.settings:
+  index.number_of_shards: 1
+  index.number_of_replicas: 0
+
+setup.kibana:
+  host: "kibana:5601"
+  protocol: "http"
+
+# =========================== Logging ===========================
+logging.level: warning
+logging.to_files: true
+logging.files:
+  path: /var/log/heartbeat
+  name: heartbeat
+  keepfiles: 3
+  permissions: 0640
+
+# =========================== Processors ===========================
+processors:
+  - add_host_metadata:
+      when.not.contains.tags: forwarded

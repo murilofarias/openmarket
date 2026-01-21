@@ -26,7 +26,7 @@ public class SecurityConfig {
                 .requestMatchers("/auth/register").permitAll()
                 .requestMatchers("/auth/login").permitAll()
                 .requestMatchers("/auth/refresh").permitAll()
-                .requestMatchers("/actuator/health").permitAll()
+                .requestMatchers("/actuator/**").permitAll()
                 // Public image access (GET only)
                 .requestMatchers(HttpMethod.GET, "/images/**").permitAll()
                 // All other endpoints require authentication

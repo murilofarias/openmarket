@@ -57,10 +57,142 @@ services:
         condition: service_healthy
       keycloak:
         condition: service_healthy
+      apm-server:
+        condition: service_healthy
     environment:
       - SPRING_PROFILES_ACTIVE=dev
+      # Elastic APM Agent Configuration
+      - ELASTIC_APM_SERVICE_NAME=openmarket-api
+      - ELASTIC_APM_SERVER_URL=http://apm-server:8200
+      - ELASTIC_APM_ENVIRONMENT=development
+      - ELASTIC_APM_APPLICATION_PACKAGES=com.example.openmarket
+      - ELASTIC_APM_LOG_LEVEL=INFO
+      # Captura detalhada para troubleshooting
+      - ELASTIC_APM_CAPTURE_BODY=all
+      - ELASTIC_APM_CAPTURE_HEADERS=true
+      - ELASTIC_APM_TRANSACTION_SAMPLE_RATE=1.0
+      - ELASTIC_APM_SPAN_STACK_TRACE_MIN_DURATION=5ms
+      - ELASTIC_APM_STACK_TRACE_LIMIT=50
+      # Instrumentação de banco de dados
+      - ELASTIC_APM_JDBC_CAPTURE_BIND_VALUES=true
     volumes:
       - ./logs:/app/logs  # Persist application logs
 
+  # =========================== Observability Stack ===========================
+
+  apm-server:
+    image: docker.elastic.co/apm/apm-server:7.17.18
+    container_name: openmarket-apm-server
+    ports:
+      - "8200:8200"
+    volumes:
+      - ./apm-server.yml:/usr/share/apm-server/apm-server.yml:ro
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:8200/ | grep -q 'version'"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+    restart: unless-stopped
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.12.0
+    container_name: openmarket-elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - cluster.name=openmarket-cluster
+      - bootstrap.memory_lock=true
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - esdata:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:9200/_cluster/health | grep -q '\"status\":\"green\"\\|\"status\":\"yellow\"'"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.12.0
+    container_name: openmarket-kibana
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - SERVER_NAME=kibana
+      - XPACK_SECURITY_ENABLED=false
+    ports:
+      - "5601:5601"
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:5601/api/status | grep -q 'available'"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+
+  metricbeat:
+    image: docker.elastic.co/beats/metricbeat:8.12.0
+    container_name: openmarket-metricbeat
+    user: root
+    volumes:
+      - ./metricbeat.yml:/usr/share/metricbeat/metricbeat.yml:ro
+      - ./kibana-springboot-dashboard.ndjson:/usr/share/metricbeat/springboot-dashboard.ndjson:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /sys/fs/cgroup:/hostfs/sys/fs/cgroup:ro
+      - /proc:/hostfs/proc:ro
+      - /:/hostfs:ro
+      - metricbeat_data:/usr/share/metricbeat/data
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - KIBANA_HOST=http://kibana:5601
+      - setup.kibana.host=kibana:5601
+    command: >
+      sh -c "metricbeat setup -e --strict.perms=false &&
+             curl -s -X POST 'http://kibana:5601/api/saved_objects/_import?overwrite=true' -H 'kbn-xsrf:true' -F 'file=@/usr/share/metricbeat/springboot-dashboard.ndjson' &&
+             curl -s -X POST 'http://kibana:5601/api/kibana/settings/defaultRoute' -H 'kbn-xsrf:true' -H 'Content-Type:application/json' -d '{\"value\":\"/app/dashboards#/view/springboot-metrics-dash\"}' &&
+             metricbeat -e --strict.perms=false -system.hostfs=/hostfs"
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+      kibana:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  heartbeat:
+    image: docker.elastic.co/beats/heartbeat:8.12.0
+    container_name: openmarket-heartbeat
+    user: root
+    volumes:
+      - ./heartbeat.yml:/usr/share/heartbeat/heartbeat.yml:ro
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - KIBANA_HOST=http://kibana:5601
+      - setup.kibana.host=kibana:5601
+    command: ["sh", "-c", "heartbeat setup -e --strict.perms=false && heartbeat -e --strict.perms=false"]
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+      kibana:
+        condition: service_healthy
+      app:
+        condition: service_started
+      keycloak:
+        condition: service_healthy
+    restart: unless-stopped
+
 volumes:
   pgdata:
+  esdata:
+    driver: local
+  metricbeat_data:
+    driver: local

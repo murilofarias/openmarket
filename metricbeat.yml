@@ -1,0 +1,94 @@
+metricbeat.config:
+  modules:
+    path: ${path.config}/modules.d/*.yml
+    reload.enabled: false
+
+# =========================== Modules Configuration ===========================
+
+metricbeat.modules:
+
+# -------------------------------- System Module --------------------------------
+# Métricas do host onde o Metricbeat está rodando
+- module: system
+  period: 30s
+  metricsets:
+    - cpu
+    - memory
+    - network
+    - diskio
+  enabled: true
+  cpu.metrics: ["percentages", "normalized_percentages"]
+  core.metrics: ["percentages"]
+
+# -------------------------------- Docker Module --------------------------------
+# Métricas essenciais dos containers Docker
+- module: docker
+  metricsets:
+    - container
+    - cpu
+    - memory
+    - network
+    - diskio
+  hosts: ["unix:///var/run/docker.sock"]
+  period: 30s
+  enabled: true
+  labels.dedot: true
+
+# -------------------------------- PostgreSQL Module --------------------------------
+# Métricas do banco de dados PostgreSQL
+- module: postgresql
+  metricsets:
+    - database
+    - activity
+  period: 60s
+  hosts: ["postgres://postgres:postgres@postgres:5432/postgres?sslmode=disable"]
+  username: postgres
+  password: postgres
+  enabled: true
+
+# -------------------------------- Spring Boot (Prometheus) Module --------------------------------
+# Métricas da aplicação OpenMarket (HikariCP, JVM, HTTP requests)
+- module: prometheus
+  metricsets:
+    - collector
+  period: 30s
+  hosts: ["app:8080"]
+  metrics_path: /actuator/prometheus
+  enabled: true
+
+# =========================== Elasticsearch Output ===========================
+output.elasticsearch:
+  hosts: ["elasticsearch:9200"]
+  protocol: "http"
+
+# =========================== Setup ===========================
+setup.template.settings:
+  index.number_of_shards: 1
+  index.number_of_replicas: 0
+
+setup.kibana:
+  host: "kibana:5601"
+  protocol: "http"
+
+# Dashboards carregados pelo entrypoint script (uma vez na inicialização)
+setup.dashboards.enabled: false
+
+# =========================== Logging ===========================
+logging.level: warning
+logging.to_files: true
+logging.files:
+  path: /var/log/metricbeat
+  name: metricbeat
+  keepfiles: 3
+  permissions: 0640
+
+# =========================== Processors ===========================
+processors:
+  - add_docker_metadata:
+      host: "unix:///var/run/docker.sock"
+  - add_host_metadata:
+      when.not.contains.tags: forwarded
+  # Remove campos desnecessários para reduzir volume de dados
+  - drop_fields:
+      fields: ["agent.ephemeral_id", "ecs.version", "host.architecture"]
+      ignore_missing: true
