@@ -1,49 +1,6 @@
 version: "3.8"
 
 services:
-  postgres:
-    image: postgres:15
-    container_name: openmarket-postgres
-    ports:
-      - "5432:5432"
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  keycloak:
-    image: quay.io/keycloak/keycloak:23.0
-    container_name: openmarket-keycloak
-    command: start-dev --import-realm
-    ports:
-      - "8180:8080"
-    environment:
-      KC_DB: postgres
-      KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
-      KC_DB_USERNAME: keycloak_user
-      KC_DB_PASSWORD: keycloak_secret
-      KEYCLOAK_ADMIN: admin
-      KEYCLOAK_ADMIN_PASSWORD: admin
-      KC_HEALTH_ENABLED: true
-      KC_METRICS_ENABLED: true
-    volumes:
-      - ./openmarket-realm.json:/opt/keycloak/data/import/openmarket-realm.json
-    depends_on:
-      postgres:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD-SHELL", "exec 3<>/dev/tcp/localhost/8080 && echo -e 'GET /health/ready HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3 && cat <&3 | grep -q '200 OK'"]
-      interval: 10s
-      timeout: 5s
-      retries: 30
-
   app:
     build:
       context: .
@@ -51,16 +8,52 @@ services:
     container_name: openmarket-app
     ports:
       - "8080:8080"
-      - "5005:5005"  # ⭐ Expose debug port
-    depends_on:
-      postgres:
-        condition: service_healthy
-      keycloak:
-        condition: service_healthy
+      - "5005:5005"  # Debug port
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8080/api/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
     environment:
       - SPRING_PROFILES_ACTIVE=dev
+      # Elastic APM Agent Configuration
+      - ELASTIC_APM_SERVICE_NAME=openmarket-api
+      - ELASTIC_APM_SERVER_URL=http://apm-server:8200
+      - ELASTIC_APM_ENVIRONMENT=development
+      - ELASTIC_APM_APPLICATION_PACKAGES=com.example.openmarket
+      - ELASTIC_APM_LOG_LEVEL=INFO
+      # Captura detalhada para troubleshooting
+      - ELASTIC_APM_CAPTURE_BODY=all
+      - ELASTIC_APM_CAPTURE_HEADERS=true
+      - ELASTIC_APM_TRANSACTION_SAMPLE_RATE=1.0
+      - ELASTIC_APM_SPAN_STACK_TRACE_MIN_DURATION=5ms
+      - ELASTIC_APM_STACK_TRACE_LIMIT=50
+      # Instrumentacao de banco de dados
+      - ELASTIC_APM_JDBC_CAPTURE_BIND_VALUES=true
     volumes:
-      - ./logs:/app/logs  # Persist application logs
+      - ./logs:/app/logs
+    networks:
+      - openmarket-network
 
-volumes:
-  pgdata:
+  heartbeat:
+    image: docker.elastic.co/beats/heartbeat:8.12.0
+    container_name: openmarket-heartbeat
+    user: root
+    volumes:
+      - ./heartbeat.yml:/usr/share/heartbeat/heartbeat.yml:ro
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - KIBANA_HOST=http://kibana:5601
+      - setup.kibana.host=kibana:5601
+    command: ["sh", "-c", "heartbeat setup -e --strict.perms=false && heartbeat -e --strict.perms=false"]
+    depends_on:
+      app:
+        condition: service_started
+    restart: unless-stopped
+    networks:
+      - openmarket-network
+
+networks:
+  openmarket-network:
+    external: true

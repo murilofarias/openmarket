@@ -72,7 +72,7 @@ check_jmeter() {
 check_application() {
     print_info "Checking if OpenMarket API is running at $BASE_URL..."
 
-    if curl -s -f -o /dev/null "$BASE_URL/actuator/health" 2>/dev/null; then
+    if curl -s -f -o /dev/null "$BASE_URL/api/actuator/health" 2>/dev/null; then
         print_info "Application is running!"
     elif curl -s -f -o /dev/null "$BASE_URL" 2>/dev/null; then
         print_info "Application is running (health endpoint not available)"

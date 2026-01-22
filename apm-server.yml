@@ -1,0 +1,24 @@
+apm-server:
+  host: "0.0.0.0:8200"
+
+  # Enable RUM (Real User Monitoring)
+  rum:
+    enabled: true
+    allow_origins: ['*']
+
+# Output to Elasticsearch
+output.elasticsearch:
+  hosts: ["elasticsearch:9200"]
+
+# Logging
+logging:
+  level: info
+  to_stderr: true
+
+# Setup template settings
+setup.template.settings:
+  index.number_of_shards: 1
+  index.number_of_replicas: 0
+
+# ILM (Index Lifecycle Management)
+setup.ilm.enabled: true
