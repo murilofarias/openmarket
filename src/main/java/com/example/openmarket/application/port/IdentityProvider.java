@@ -19,6 +19,30 @@ public interface IdentityProvider {
     String createUser(String email, String password, String name);
 
     /**
+     * Authenticates a user and returns tokens.
+     *
+     * @param email User's email
+     * @param password User's password
+     * @return AuthResult with tokens and user info
+     */
+    AuthResult authenticate(String email, String password);
+
+    /**
+     * Refreshes an access token using a refresh token.
+     *
+     * @param refreshToken The refresh token
+     * @return AuthResult with new tokens
+     */
+    AuthResult refreshToken(String refreshToken);
+
+    /**
+     * Revokes/invalidates a refresh token (logout).
+     *
+     * @param refreshToken The refresh token to revoke
+     */
+    void revokeToken(String refreshToken);
+
+    /**
      * Assigns roles to a user.
      *
      * @param userId The user's ID in the identity provider

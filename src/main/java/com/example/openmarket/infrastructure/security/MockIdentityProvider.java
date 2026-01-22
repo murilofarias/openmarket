@@ -1,5 +1,6 @@
 package com.example.openmarket.infrastructure.security;
 
+import com.example.openmarket.application.port.AuthResult;
 import com.example.openmarket.application.port.IdentityProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,9 +28,35 @@ public class MockIdentityProvider implements IdentityProvider {
     @Override
     public String createUser(String email, String password, String name) {
         String userId = UUID.randomUUID().toString();
-        users.put(userId, new UserData(email, name, new HashSet<>(), true));
+        users.put(userId, new UserData(userId, email, password, name, new HashSet<>(), true));
         log.info("Mock: Created user {} with email {}", userId, email);
         return userId;
+    }
+
+    @Override
+    public AuthResult authenticate(String email, String password) {
+        UserData user = users.values().stream()
+            .filter(u -> u.email.equals(email) && u.password.equals(password) && u.enabled)
+            .findFirst()
+            .orElseThrow(() -> new RuntimeException("Invalid credentials"));
+
+        log.info("Mock: Authenticated user {}", user.id);
+        return createMockAuthResult(user);
+    }
+
+    @Override
+    public AuthResult refreshToken(String refreshToken) {
+        // In mock, extract userId from refresh token (format: "mock-refresh-{userId}")
+        String userId = refreshToken.replace("mock-refresh-", "");
+        UserData user = getUserOrThrow(userId);
+
+        log.info("Mock: Refreshed token for user {}", userId);
+        return createMockAuthResult(user);
+    }
+
+    @Override
+    public void revokeToken(String refreshToken) {
+        log.info("Mock: Revoked refresh token {}", refreshToken);
     }
 
     @Override
@@ -82,14 +109,28 @@ public class MockIdentityProvider implements IdentityProvider {
         return user;
     }
 
+    private AuthResult createMockAuthResult(UserData user) {
+        return new AuthResult(
+            "mock-access-token-" + user.id,
+            "mock-refresh-" + user.id,
+            3600,
+            "Bearer",
+            new AuthResult.UserInfo(user.id, user.email, user.name)
+        );
+    }
+
     private static class UserData {
+        String id;
         String email;
+        String password;
         String name;
         Set<String> roles;
         boolean enabled;
 
-        UserData(String email, String name, Set<String> roles, boolean enabled) {
+        UserData(String id, String email, String password, String name, Set<String> roles, boolean enabled) {
+            this.id = id;
             this.email = email;
+            this.password = password;
             this.name = name;
             this.roles = roles;
             this.enabled = enabled;

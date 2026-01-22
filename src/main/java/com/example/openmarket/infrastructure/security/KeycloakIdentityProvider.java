@@ -1,6 +1,8 @@
 package com.example.openmarket.infrastructure.security;
 
+import com.example.openmarket.application.port.AuthResult;
 import com.example.openmarket.application.port.IdentityProvider;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import org.keycloak.admin.client.Keycloak;
@@ -12,16 +14,27 @@ import org.keycloak.representations.idm.RoleRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Primary;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestTemplate;
 
 import jakarta.ws.rs.core.Response;
+import java.util.Base64;
 import java.util.Collections;
-import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 @Component
 @Primary
 public class KeycloakIdentityProvider implements IdentityProvider {
+
+    private final RestTemplate restTemplate;
+    private final ObjectMapper objectMapper;
 
     @Value("${keycloak.server-url}")
     private String serverUrl;
@@ -37,6 +50,13 @@ public class KeycloakIdentityProvider implements IdentityProvider {
 
     private Keycloak keycloak;
     private RealmResource realmResource;
+    private String tokenUrl;
+    private String logoutUrl;
+
+    public KeycloakIdentityProvider(RestTemplate restTemplate, ObjectMapper objectMapper) {
+        this.restTemplate = restTemplate;
+        this.objectMapper = objectMapper;
+    }
 
     @PostConstruct
     public void init() {
@@ -49,6 +69,8 @@ public class KeycloakIdentityProvider implements IdentityProvider {
             .build();
 
         this.realmResource = keycloak.realm(realm);
+        this.tokenUrl = serverUrl + "/realms/" + realm + "/protocol/openid-connect/token";
+        this.logoutUrl = serverUrl + "/realms/" + realm + "/protocol/openid-connect/logout";
     }
 
     @PreDestroy
@@ -73,7 +95,14 @@ public class KeycloakIdentityProvider implements IdentityProvider {
             user.setLastName(nameParts[1]);
         }
 
-        // Create user
+        // Set password credentials before creation
+        CredentialRepresentation credential = new CredentialRepresentation();
+        credential.setType(CredentialRepresentation.PASSWORD);
+        credential.setValue(password);
+        credential.setTemporary(false);
+        user.setCredentials(Collections.singletonList(credential));
+
+        // Create user with credentials in a single request
         Response response = realmResource.users().create(user);
 
         if (response.getStatus() != 201) {
@@ -86,15 +115,68 @@ public class KeycloakIdentityProvider implements IdentityProvider {
 
         response.close();
 
-        // Set password
-        UserResource userResource = realmResource.users().get(userId);
-        CredentialRepresentation credential = new CredentialRepresentation();
-        credential.setType(CredentialRepresentation.PASSWORD);
-        credential.setValue(password);
-        credential.setTemporary(false);
-        userResource.resetPassword(credential);
-
         return userId;
+    }
+
+    @Override
+    public AuthResult authenticate(String email, String password) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+        MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
+        body.add("grant_type", "password");
+        body.add("client_id", clientId);
+        body.add("client_secret", clientSecret);
+        body.add("username", email);
+        body.add("password", password);
+        body.add("scope", "openid profile email");
+
+        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(body, headers);
+
+        ResponseEntity<Map> response = restTemplate.postForEntity(tokenUrl, request, Map.class);
+
+        if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null) {
+            throw new RuntimeException("Failed to authenticate user");
+        }
+
+        return toAuthResult(response.getBody());
+    }
+
+    @Override
+    public AuthResult refreshToken(String refreshToken) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+        MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
+        body.add("grant_type", "refresh_token");
+        body.add("client_id", clientId);
+        body.add("client_secret", clientSecret);
+        body.add("refresh_token", refreshToken);
+
+        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(body, headers);
+
+        ResponseEntity<Map> response = restTemplate.postForEntity(tokenUrl, request, Map.class);
+
+        if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null) {
+            throw new RuntimeException("Failed to refresh token");
+        }
+
+        return toAuthResult(response.getBody());
+    }
+
+    @Override
+    public void revokeToken(String refreshToken) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+        MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
+        body.add("client_id", clientId);
+        body.add("client_secret", clientSecret);
+        body.add("refresh_token", refreshToken);
+
+        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(body, headers);
+
+        restTemplate.postForEntity(logoutUrl, request, Void.class);
     }
 
     @Override
@@ -145,5 +227,36 @@ public class KeycloakIdentityProvider implements IdentityProvider {
         UserRepresentation user = userResource.toRepresentation();
         user.setEnabled(false);
         userResource.update(user);
+    }
+
+    @SuppressWarnings("unchecked")
+    private AuthResult toAuthResult(Map<String, Object> tokenResponse) {
+        String accessToken = (String) tokenResponse.get("access_token");
+        Map<String, Object> claims = decodeJwtPayload(accessToken);
+
+        AuthResult.UserInfo userInfo = new AuthResult.UserInfo(
+            (String) claims.get("sub"),
+            (String) claims.get("email"),
+            (String) claims.get("name")
+        );
+
+        return new AuthResult(
+            accessToken,
+            (String) tokenResponse.get("refresh_token"),
+            (Integer) tokenResponse.get("expires_in"),
+            (String) tokenResponse.get("token_type"),
+            userInfo
+        );
+    }
+
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> decodeJwtPayload(String jwt) {
+        try {
+            String[] parts = jwt.split("\\.");
+            String payload = new String(Base64.getUrlDecoder().decode(parts[1]));
+            return objectMapper.readValue(payload, Map.class);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to decode JWT", e);
+        }
     }
 }
