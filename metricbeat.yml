@@ -53,7 +53,7 @@ metricbeat.modules:
     - collector
   period: 30s
   hosts: ["app:8080"]
-  metrics_path: /actuator/prometheus
+  metrics_path: /api/actuator/prometheus
   enabled: true
 
 # =========================== Elasticsearch Output ===========================

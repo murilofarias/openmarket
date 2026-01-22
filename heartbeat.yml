@@ -12,7 +12,7 @@ heartbeat.monitors:
   id: openmarket-api
   name: OpenMarket API
   schedule: '@every 10s'
-  hosts: ["http://app:8080/actuator/health"]
+  hosts: ["http://app:8080/api/actuator/health"]
   check.request:
     method: GET
   check.response:
