@@ -4,18 +4,13 @@ import com.example.openmarket.application.port.AuthResult;
 import com.example.openmarket.application.port.IdentityProvider;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
-import jakarta.annotation.PreDestroy;
-import org.keycloak.admin.client.Keycloak;
-import org.keycloak.admin.client.KeycloakBuilder;
-import org.keycloak.admin.client.resource.RealmResource;
-import org.keycloak.admin.client.resource.UserResource;
-import org.keycloak.representations.idm.CredentialRepresentation;
-import org.keycloak.representations.idm.RoleRepresentation;
-import org.keycloak.representations.idm.UserRepresentation;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Primary;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
@@ -23,9 +18,9 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
-import jakarta.ws.rs.core.Response;
 import java.util.Base64;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -33,8 +28,10 @@ import java.util.Set;
 @Primary
 public class KeycloakIdentityProvider implements IdentityProvider {
 
+    private static final Logger log = LoggerFactory.getLogger(KeycloakIdentityProvider.class);
+
     private final RestTemplate restTemplate;
-    private final ObjectMapper objectMapper;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Value("${keycloak.server-url}")
     private String serverUrl;
@@ -48,74 +45,76 @@ public class KeycloakIdentityProvider implements IdentityProvider {
     @Value("${keycloak.client-secret}")
     private String clientSecret;
 
-    private Keycloak keycloak;
-    private RealmResource realmResource;
     private String tokenUrl;
     private String logoutUrl;
+    private String adminUsersUrl;
 
-    public KeycloakIdentityProvider(RestTemplate restTemplate, ObjectMapper objectMapper) {
+    // Cached service token for admin operations
+    private String cachedServiceToken;
+    private long tokenExpiresAt;
+
+    public KeycloakIdentityProvider(RestTemplate restTemplate) {
         this.restTemplate = restTemplate;
-        this.objectMapper = objectMapper;
     }
 
     @PostConstruct
     public void init() {
-        this.keycloak = KeycloakBuilder.builder()
-            .serverUrl(serverUrl)
-            .realm(realm)
-            .clientId(clientId)
-            .clientSecret(clientSecret)
-            .grantType(org.keycloak.OAuth2Constants.CLIENT_CREDENTIALS)
-            .build();
-
-        this.realmResource = keycloak.realm(realm);
         this.tokenUrl = serverUrl + "/realms/" + realm + "/protocol/openid-connect/token";
         this.logoutUrl = serverUrl + "/realms/" + realm + "/protocol/openid-connect/logout";
+        this.adminUsersUrl = serverUrl + "/admin/realms/" + realm + "/users";
+
+        // Warm-up: obtain service token on startup to pre-establish connection
+        warmUp();
     }
 
-    @PreDestroy
-    public void cleanup() {
-        if (keycloak != null) {
-            keycloak.close();
+    private void warmUp() {
+        try {
+            log.info("Warming up Keycloak connection...");
+            long start = System.currentTimeMillis();
+            getServiceToken();
+            long elapsed = System.currentTimeMillis() - start;
+            log.info("Keycloak warm-up completed in {}ms, token cached for {}s", elapsed, (tokenExpiresAt - System.currentTimeMillis()) / 1000);
+        } catch (Exception e) {
+            log.warn("Keycloak warm-up failed (will retry on first request): {}", e.getMessage());
         }
     }
 
     @Override
     public String createUser(String email, String password, String name) {
-        UserRepresentation user = new UserRepresentation();
-        user.setUsername(email);
-        user.setEmail(email);
-        user.setEmailVerified(true);
-        user.setEnabled(true);
-
-        // Split name into first and last name
         String[] nameParts = name.split(" ", 2);
-        user.setFirstName(nameParts[0]);
+
+        Map<String, Object> credential = Map.of(
+            "type", "password",
+            "value", password,
+            "temporary", false
+        );
+
+        Map<String, Object> userPayload = new HashMap<>();
+        userPayload.put("username", email);
+        userPayload.put("email", email);
+        userPayload.put("emailVerified", true);
+        userPayload.put("enabled", true);
+        userPayload.put("firstName", nameParts[0]);
         if (nameParts.length > 1) {
-            user.setLastName(nameParts[1]);
+            userPayload.put("lastName", nameParts[1]);
+        }
+        userPayload.put("credentials", Collections.singletonList(credential));
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(getServiceToken());
+
+        HttpEntity<Map<String, Object>> request = new HttpEntity<>(userPayload, headers);
+
+        ResponseEntity<Void> response = restTemplate.postForEntity(adminUsersUrl, request, Void.class);
+
+        if (!response.getStatusCode().is2xxSuccessful()) {
+            throw new RuntimeException("Failed to create user: " + response.getStatusCode());
         }
 
-        // Set password credentials before creation
-        CredentialRepresentation credential = new CredentialRepresentation();
-        credential.setType(CredentialRepresentation.PASSWORD);
-        credential.setValue(password);
-        credential.setTemporary(false);
-        user.setCredentials(Collections.singletonList(credential));
-
-        // Create user with credentials in a single request
-        Response response = realmResource.users().create(user);
-
-        if (response.getStatus() != 201) {
-            throw new RuntimeException("Failed to create user: " + response.getStatusInfo());
-        }
-
-        // Extract user ID from location header
-        String locationHeader = response.getHeaderString("Location");
-        String userId = locationHeader.substring(locationHeader.lastIndexOf('/') + 1);
-
-        response.close();
-
-        return userId;
+        // Extract user ID from Location header
+        String location = response.getHeaders().getLocation().toString();
+        return location.substring(location.lastIndexOf('/') + 1);
     }
 
     @Override
@@ -181,32 +180,56 @@ public class KeycloakIdentityProvider implements IdentityProvider {
 
     @Override
     public void assignRoles(String userId, Set<String> roles) {
-        UserResource userResource = realmResource.users().get(userId);
-
-        for (String roleName : roles) {
-            RoleRepresentation role = realmResource.roles().get(roleName).toRepresentation();
-            userResource.roles().realmLevel().add(Collections.singletonList(role));
+        for (String role : roles) {
+            addRole(userId, role);
         }
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public void addRole(String userId, String role) {
-        UserResource userResource = realmResource.users().get(userId);
-        RoleRepresentation roleRepresentation = realmResource.roles().get(role).toRepresentation();
-        userResource.roles().realmLevel().add(Collections.singletonList(roleRepresentation));
+        // Get role representation
+        String roleUrl = serverUrl + "/admin/realms/" + realm + "/roles/" + role;
+        HttpHeaders headers = createAdminHeaders();
+
+        ResponseEntity<Map> roleResponse = restTemplate.exchange(
+            roleUrl, HttpMethod.GET,
+            new HttpEntity<>(headers), Map.class);
+
+        Map<String, Object> roleRep = roleResponse.getBody();
+
+        // Add role to user
+        String userRolesUrl = adminUsersUrl + "/" + userId + "/role-mappings/realm";
+        HttpEntity<Object> request = new HttpEntity<>(Collections.singletonList(roleRep), headers);
+        restTemplate.postForEntity(userRolesUrl, request, Void.class);
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public void removeRole(String userId, String role) {
-        UserResource userResource = realmResource.users().get(userId);
-        RoleRepresentation roleRepresentation = realmResource.roles().get(role).toRepresentation();
-        userResource.roles().realmLevel().remove(Collections.singletonList(roleRepresentation));
+        // Get role representation
+        String roleUrl = serverUrl + "/admin/realms/" + realm + "/roles/" + role;
+        HttpHeaders headers = createAdminHeaders();
+
+        ResponseEntity<Map> roleResponse = restTemplate.exchange(
+            roleUrl, HttpMethod.GET,
+            new HttpEntity<>(headers), Map.class);
+
+        Map<String, Object> roleRep = roleResponse.getBody();
+
+        // Remove role from user
+        String userRolesUrl = adminUsersUrl + "/" + userId + "/role-mappings/realm";
+        HttpEntity<Object> request = new HttpEntity<>(Collections.singletonList(roleRep), headers);
+        restTemplate.exchange(userRolesUrl, HttpMethod.DELETE, request, Void.class);
     }
 
     @Override
     public boolean userExists(String userId) {
         try {
-            realmResource.users().get(userId).toRepresentation();
+            String userUrl = adminUsersUrl + "/" + userId;
+            HttpHeaders headers = createAdminHeaders();
+            restTemplate.exchange(userUrl, HttpMethod.GET,
+                new HttpEntity<>(headers), Map.class);
             return true;
         } catch (Exception e) {
             return false;
@@ -214,19 +237,39 @@ public class KeycloakIdentityProvider implements IdentityProvider {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public void enableUser(String userId) {
-        UserResource userResource = realmResource.users().get(userId);
-        UserRepresentation user = userResource.toRepresentation();
-        user.setEnabled(true);
-        userResource.update(user);
+        updateUserEnabled(userId, true);
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public void disableUser(String userId) {
-        UserResource userResource = realmResource.users().get(userId);
-        UserRepresentation user = userResource.toRepresentation();
-        user.setEnabled(false);
-        userResource.update(user);
+        updateUserEnabled(userId, false);
+    }
+
+    private void updateUserEnabled(String userId, boolean enabled) {
+        String userUrl = adminUsersUrl + "/" + userId;
+        HttpHeaders headers = createAdminHeaders();
+
+        // Get current user
+        ResponseEntity<Map> response = restTemplate.exchange(
+            userUrl, HttpMethod.GET,
+            new HttpEntity<>(headers), Map.class);
+
+        Map<String, Object> user = new HashMap<>(response.getBody());
+        user.put("enabled", enabled);
+
+        // Update user
+        HttpEntity<Map<String, Object>> request = new HttpEntity<>(user, headers);
+        restTemplate.exchange(userUrl, HttpMethod.PUT, request, Void.class);
+    }
+
+    private HttpHeaders createAdminHeaders() {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(getServiceToken());
+        return headers;
     }
 
     @SuppressWarnings("unchecked")
@@ -258,5 +301,36 @@ public class KeycloakIdentityProvider implements IdentityProvider {
         } catch (Exception e) {
             throw new RuntimeException("Failed to decode JWT", e);
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    private synchronized String getServiceToken() {
+        // Return cached token if still valid (with 30s buffer)
+        if (cachedServiceToken != null && System.currentTimeMillis() < tokenExpiresAt - 30000) {
+            return cachedServiceToken;
+        }
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+        MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
+        body.add("grant_type", "client_credentials");
+        body.add("client_id", clientId);
+        body.add("client_secret", clientSecret);
+
+        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(body, headers);
+
+        ResponseEntity<Map> response = restTemplate.postForEntity(tokenUrl, request, Map.class);
+
+        if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null) {
+            throw new RuntimeException("Failed to obtain service token");
+        }
+
+        Map<String, Object> tokenResponse = response.getBody();
+        cachedServiceToken = (String) tokenResponse.get("access_token");
+        int expiresIn = (Integer) tokenResponse.get("expires_in");
+        tokenExpiresAt = System.currentTimeMillis() + (expiresIn * 1000L);
+
+        return cachedServiceToken;
     }
 }

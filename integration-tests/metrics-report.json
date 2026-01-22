@@ -1,13 +1,13 @@
 {
-  "reportDate": "2026-01-21 20:27:14",
-  "testDate": "2026-01-21 20:27:03",
+  "reportDate": "2026-01-22 19:07:29",
+  "testDate": "2026-01-22 19:07:21",
   "resultsFile": "results.jtl",
   "metrics": [
     {
       "label": "1.1 Register Seller User",
-      "elapsed": 1801,
-      "latency": 1795,
-      "connect": 20,
+      "elapsed": 71,
+      "latency": 68,
+      "connect": 15,
       "bytes": 562,
       "sentBytes": 322,
       "responseCode": "201",
@@ -15,8 +15,8 @@
     },
     {
       "label": "1.2 Login as Seller",
-      "elapsed": 171,
-      "latency": 170,
+      "elapsed": 37,
+      "latency": 36,
       "connect": 0,
       "bytes": 2897,
       "sentBytes": 287,
@@ -25,8 +25,8 @@
     },
     {
       "label": "1.3 Create Seller Profile",
-      "elapsed": 351,
-      "latency": 350,
+      "elapsed": 24,
+      "latency": 24,
       "connect": 0,
       "bytes": 484,
       "sentBytes": 1955,
@@ -35,8 +35,8 @@
     },
     {
       "label": "1.4 Create Product",
-      "elapsed": 77,
-      "latency": 76,
+      "elapsed": 9,
+      "latency": 9,
       "connect": 0,
       "bytes": 477,
       "sentBytes": 2015,
@@ -45,18 +45,18 @@
     },
     {
       "label": "1.5 Upload Product Image",
-      "elapsed": 89,
-      "latency": 88,
+      "elapsed": 18,
+      "latency": 18,
       "connect": 0,
       "bytes": 571,
-      "sentBytes": 16280,
+      "sentBytes": 16289,
       "responseCode": "201",
       "success": true
     },
     {
       "label": "1.6 Publish Product",
-      "elapsed": 22,
-      "latency": 22,
+      "elapsed": 12,
+      "latency": 12,
       "connect": 0,
       "bytes": 463,
       "sentBytes": 1880,
@@ -65,7 +65,7 @@
     },
     {
       "label": "1.7 Update Product Stock",
-      "elapsed": 23,
+      "elapsed": 15,
       "latency": 0,
       "connect": 0,
       "bytes": 361,
@@ -75,8 +75,8 @@
     },
     {
       "label": "2.1 Register Buyer User",
-      "elapsed": 79,
-      "latency": 78,
+      "elapsed": 39,
+      "latency": 39,
       "connect": 0,
       "bytes": 562,
       "sentBytes": 320,
@@ -85,8 +85,8 @@
     },
     {
       "label": "2.2 Login as Buyer",
-      "elapsed": 54,
-      "latency": 53,
+      "elapsed": 37,
+      "latency": 36,
       "connect": 0,
       "bytes": 2889,
       "sentBytes": 286,
@@ -95,8 +95,8 @@
     },
     {
       "label": "2.3 Create Buyer Profile",
-      "elapsed": 46,
-      "latency": 46,
+      "elapsed": 20,
+      "latency": 19,
       "connect": 0,
       "bytes": 484,
       "sentBytes": 1908,
@@ -105,18 +105,18 @@
     },
     {
       "label": "2.4 Search Products",
-      "elapsed": 69,
-      "latency": 68,
+      "elapsed": 10,
+      "latency": 9,
       "connect": 0,
-      "bytes": 1173,
+      "bytes": 2019,
       "sentBytes": 1866,
       "responseCode": "200",
       "success": true
     },
     {
       "label": "2.5 Get Product Details",
-      "elapsed": 15,
-      "latency": 15,
+      "elapsed": 8,
+      "latency": 8,
       "connect": 0,
       "bytes": 1008,
       "sentBytes": 1846,
@@ -125,8 +125,8 @@
     },
     {
       "label": "2.6 Get Product Image",
-      "elapsed": 74,
-      "latency": 56,
+      "elapsed": 6,
+      "latency": 4,
       "connect": 0,
       "bytes": 14504,
       "sentBytes": 226,
@@ -139,8 +139,8 @@
     "successfulRequests": 13,
     "failedRequests": 0,
     "errorRate": 0.00,
-    "avgResponseTime": 220.85,
-    "minResponseTime": 15,
-    "maxResponseTime": 1801
+    "avgResponseTime": 23.54,
+    "minResponseTime": 6,
+    "maxResponseTime": 71
   }
 }

@@ -1,11 +1,17 @@
 logging:
   level:
-    org.hibernate.SQL: DEBUG
-    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
-    org.hibernate.tool.schema: DEBUG  # ⭐ Shows DDL generation
-    org.hibernate.tool.hbm2ddl: DEBUG # ⭐ Shows schema creation
-    org.springframework.orm.jpa: DEBUG
-    com.zaxxer.hikari: DEBUG
+    #org.hibernate.SQL: DEBUG
+    #org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    #org.hibernate.tool.schema: DEBUG  # ⭐ Shows DDL generation
+    #org.hibernate.tool.hbm2ddl: DEBUG # ⭐ Shows schema creation
+    #org.springframework.orm.jpa: DEBUG
+    #com.zaxxer.hikari: DEBUG
+    # Apache HttpClient 5 debugging
+    org.apache.hc.client5.http: DEBUG
+    org.apache.hc.client5.http.wire: DEBUG  # Full wire logging (request/response bodies)
+    org.apache.hc.client5.http.headers: DEBUG
+    org.apache.hc.client5.http.impl.classic: DEBUG
+    org.apache.hc.client5.http.impl.io: DEBUG  # Connection pool operations
 
   jpa:
     show-sql: true

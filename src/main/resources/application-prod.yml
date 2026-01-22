@@ -21,3 +21,7 @@ app:
   storage:
     upload-dir: /var/lib/openmarket/uploads
     base-url: ${APP_STORAGE_BASE_URL:https://api.openmarket.com/images}
+
+http:
+  client:
+    type: pooled
